@@ -1502,8 +1502,9 @@ function wrapper(plugin_info) {
 
                 },
 
-                function loadMissionFailed(err) {
+                function loadMissionFailed(xhr) {
 
+                    let err = new Error("Intel /r/getMissionDetail request failed (" + xhr.statusText + ")");
                     console.error("ERROR QUERYING MISSION DETAILS FROM INTEL:", err);
                     mission.$pending = false;
                     mission.$context.updateElem(mission);
