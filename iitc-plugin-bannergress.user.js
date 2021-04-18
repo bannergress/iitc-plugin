@@ -1733,6 +1733,7 @@ function wrapper(plugin_info) {
         // save original window.plugin.missions.showMissionListDialog() and install our hook
         PLUGIN._showMissionListDialog = MISSIONS_PLUGIN.showMissionListDialog;    
         MISSIONS_PLUGIN.showMissionListDialog = function() {
+            // WARNING! {this} and scope may be lost here - do not assume anything!
             console.debug("showMissionListDialog", arguments);
             const PLUGIN = window.plugin.bannerIndexer;
             return PLUGIN.createContext(arguments, PLUGIN._showMissionListDialog, 'showMissionListDialog', 'list',
@@ -1756,6 +1757,7 @@ function wrapper(plugin_info) {
         // save original window.plugin.missions.showMissionDialog() and install our hook
         PLUGIN._showMissionDialog = MISSIONS_PLUGIN.showMissionDialog;
         MISSIONS_PLUGIN.showMissionDialog = function() {
+            // WARNING! {this} and scope may be lost here - do not assume anything!
             console.debug("showMissionDialog", arguments);
             const PLUGIN = window.plugin.bannerIndexer;
             return PLUGIN.createContext(arguments, PLUGIN._showMissionDialog, 'showMissionDialog', 'single',
