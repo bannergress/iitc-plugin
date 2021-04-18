@@ -774,7 +774,8 @@ function wrapper(plugin_info) {
             let mapControlEnabledCbx,
                 batchMaxUserInput,
                 providerAreaDiv,
-                providerSelect;
+                providerSelect,
+                batchMaxHardInput, batchMinimumDelayInput, batchRandomizeExtraDelayInput, refreshLockTimeInput
 
             let buttons = [
                 {
@@ -788,12 +789,28 @@ function wrapper(plugin_info) {
                 {
                     text: 'Save',
                     click: () => {
-                        plugin.settings.mapControlEnabled = mapControlEnabledCbx.val() == "on";
-                        plugin.settings.batchMaxUser = Math.min(settings.batchMaxHard, parseInt(batchMaxUserInput.val()));
-                        plugin.settings.provider = providerSelect.val();
+
+                        let settings = plugin.settings;
+
+                        // tweaks
+                        settings.batchMaxHard = batchMaxHardInput.val();
+                        settings.batchMinimumDelay = batchMinimumDelayInput.val();
+                        settings.batchRandomizeExtraDelay = batchRandomizeExtraDelayInput.val();
+                        settings.refreshLockTime = refreshLockTimeInput.val();
+
+                        // general
+                        settings.mapControlEnabled = mapControlEnabledCbx.val() == "on";
+                        settings.batchMaxUser = Math.min(settings.batchMaxHard, parseInt(batchMaxUserInput.val()));
+                        settings.provider = providerSelect.val();
+
+                        // provider
                         plugin.provider = plugin.integrations[plugin.settings.provider];
+
+                        // save!
                         plugin.provider.saveSettings(providerAreaDiv, this.dlg);
                         plugin.saveSettings();
+
+                        // bye
                         this.dlg.dialog("close");
                     }
                 }
@@ -831,6 +848,27 @@ function wrapper(plugin_info) {
                             </tr>
                         </table>
                     </fieldset>
+                    <fieldset class="tweaks">
+                        <legend>Tweaks</legend>
+                        <table>
+                            <tr>
+                                <td>Hard max number of missions to batch process:</td>
+                                <td><input class="bannerIndexer-settings-dialog-batchMaxHard" style="width: 100%" type="number" min="1"></td>
+                            </tr>
+                            <tr>
+                                <td>Batch minimum delay: [ms]</td>
+                                <td><input class="bannerIndexer-settings-dialog-batchMinimumDelay" style="width: 100%" type="number" min="0" step="100"></td>
+                            </tr>
+                            <tr>
+                                <td>Batch randomized extra delay: [ms]</td>
+                                <td><input class="bannerIndexer-settings-dialog-batchRandomizeExtraDelay" style="width: 100%" type="number" min="0" step="100"></td>
+                            </tr>
+                            <tr>
+                                <td>Refresh lock time: [ms]</td>
+                                <td><input class="bannerIndexer-settings-dialog-refreshLockTime" style="width: 100%" type="number" min="0" step="1000"></td>
+                            </tr>
+                        </table>
+                    </fieldset>
                     <fieldset style="margin-top: 1em">
                         <legend>Integration</legend>
                         <div class="bannerIndexer-settings-dialog-provider-area"></div>
@@ -851,12 +889,26 @@ function wrapper(plugin_info) {
                         providerAreaDiv = $(".bannerIndexer-settings-dialog-provider-area").first();
                         mapControlEnabledCbx = $(".bannerIndexer-settings-dialog-mapControlEnabled").first();
                         batchMaxUserInput = $(".bannerIndexer-settings-dialog-batchMaxUser").first();
+
+                        batchMaxHardInput = $(".bannerIndexer-settings-dialog-batchMaxHard").first();
+                        batchMinimumDelayInput = $(".bannerIndexer-settings-dialog-batchMinimumDelay").first();
+                        batchRandomizeExtraDelayInput = $(".bannerIndexer-settings-dialog-batchRandomizeExtraDelay").first();
+                        refreshLockTimeInput = $(".bannerIndexer-settings-dialog-refreshLockTime").first();
                         
                         if (settings.mapControlEnabled)
                             mapControlEnabledCbx.attr("checked", "checked");
 
                         batchMaxUserInput.attr("max", settings.batchMaxHard);
                         batchMaxUserInput.val(settings.batchMaxUser);
+
+                        batchMaxHardInput.val(settings.batchMaxHard);
+                        batchMinimumDelayInput.val(settings.batchMinimumDelay);
+                        batchRandomizeExtraDelayInput.val(settings.batchRandomizeExtraDelay);
+                        refreshLockTimeInput.val(settings.refreshLockTime);
+
+                        if (localStorage.getItem("BANNERINDEXER_TWEAKS") != null) {
+                            $(".bannerIndexer-settings-dialog .tweaks").show();
+                        }
                         
                         //console.log("select", select);
                         for (let key in plugin.integrations) {
@@ -1373,6 +1425,10 @@ function wrapper(plugin_info) {
             padding-bottom: 0.5em;
         }
 
+        .bannerIndexer-settings-dialog .tweaks {
+            display: none;
+        }
+
         .bannerIndexer-settings-dialog table tr td:first-child {
             width: 50%
         }
@@ -1534,9 +1590,9 @@ function wrapper(plugin_info) {
         this.settings = Object.assign({
             provider: 'disabled',
             batchMinimumDelay: 500,
-            batchRandomizeExtraDelay: 100,
-            batchMaxHard: 200,
-            batchMaxUser: 50,
+            batchRandomizeExtraDelay: 1000,
+            batchMaxHard: 1000,
+            batchMaxUser: 200,
             mapControlEnabled: true,
             refreshLockTime: 7 * 24 * 60 * 60 * 1000
         }, getKey("plugin.bannerIndexer.settings") || {});
