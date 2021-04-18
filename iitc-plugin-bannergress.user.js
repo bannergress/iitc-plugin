@@ -354,6 +354,8 @@ function wrapper(plugin_info) {
 
         missions = [];
         
+        origin = null;
+
         dialog = null;
 
         plugin = null;
@@ -1795,6 +1797,43 @@ function wrapper(plugin_info) {
 
             return res;
         }
+
+        PLUGIN._openTopMissions = MISSIONS_PLUGIN.openTopMissions;
+        PLUGIN._openPortalMissions = MISSIONS_PLUGIN.openPortalMissions;
+        PLUGIN._openMission = MISSIONS_PLUGIN.openMission;
+
+        MISSIONS_PLUGIN.openTopMissions = function() {
+            const PLUGIN = window.plugin.bannerIndexer;
+            PLUGIN.constraints = {
+                time: Date.now(),
+                context: 'openTopMissions',
+                bounds: map.getBounds()
+            }
+            console.debug("openTopMissions", PLUGIN.constraints);
+            return PLUGIN._openTopMissions.call(MISSIONS_PLUGIN);
+        }
+
+        MISSIONS_PLUGIN.openPortalMissions = function() {
+            const PLUGIN = window.plugin.bannerIndexer;
+            PLUGIN.constraints = {
+                time: Date.now(),
+                context: 'openPortalMissions',
+                portalGuid: window.selectedPortal
+            }
+            console.debug("openPortalMissions", PLUGIN.constraints);
+            return PLUGIN._openPortalMissions.call(MISSIONS_PLUGIN);
+        }
+
+        MISSIONS_PLUGIN.openMission = function(guid) {
+            const PLUGIN = window.plugin.bannerIndexer;
+            PLUGIN.constraints = {
+                time: Date.now(),
+                context: 'openMission',
+                missionGuid: guid
+            }
+            console.debug("openMission", PLUGIN.constraints);
+            return PLUGIN._openMission.call(MISSIONS_PLUGIN, guid);
+        }
         
         // save original window.plugin.missions.showMissionListDialog() and install our hook
         PLUGIN._showMissionListDialog = MISSIONS_PLUGIN.showMissionListDialog;    
@@ -1806,9 +1845,13 @@ function wrapper(plugin_info) {
             (context, args, isAfter) => {
                 if (!isAfter) {
                     //console.log("CALLBACK BEFORE", context);
+                    console.log("_____constraints", PLUGIN.constraints);
+                    context.origin = PLUGIN.constraints;
+                    PLUGIN.constraints = null;
                     args[0] = context.missions;
                 } else {
                     //console.log("CALLBACK AFTER", context);
+                    console.log("_____constraints", PLUGIN.constraints);
                     let opts = {};
                     if (!isSmartphone()) {
                         opts.height = Math.round(window.innerHeight * 0.9);
@@ -1830,8 +1873,12 @@ function wrapper(plugin_info) {
             (context, args, isAfter) => {
                 if (!isAfter) {
                     //console.log("CALLBACK BEFORE", context);
+                    console.log("_____constraints", PLUGIN.constraints);
+                    context.origin = PLUGIN.constraints;
+                    PLUGIN.constraints = null;
                     args[0] = context.missions[0];
                 } else {
+                    console.log("_____constraints", PLUGIN.constraints);
                     //console.log("CALLBACK AFTER", context);
                 }
             });
