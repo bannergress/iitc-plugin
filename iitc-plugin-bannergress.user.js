@@ -450,16 +450,16 @@ function wrapper(plugin_info) {
         getStatus(m) {
             if (m && m.$pending) {
                 return { id: 'pending', icon: '⏳', text: 'Updating', title: 'Updating...', locked: true };
-            } else if (m.$known && (m.$known.waypoints || m.$known.$lastUpdated)) {
+            } else if (m.$known && (m.$known.waypoints || m.$known.$detailsUpdated)) {
                 // known and indexed - check if it was done recently
                 let lockTime = this.plugin.settings.refreshLockTime;
-                let lockedUntil = m.$known.$lastUpdated + lockTime;
+                let lockedUntil = m.$known.$detailsUpdated + lockTime;
                 let now = Date.now();
                 let deltaTime = lockedUntil - now;
-                let time = new Date(m.$known.$lastUpdated).toLocaleDateString();
-                if (m.$known.$lastUpdated && deltaTime > 0) {
+                let time = new Date(m.$known.$detailsUpdated).toLocaleDateString();
+                if (m.$known.$detailsUpdated && deltaTime > 0) {
     
-                    //console.log("MODIFIED", m.$known.$lastUpdated, lockTime, deltaTime, time);
+                    //console.log("MODIFIED", m.$known.$detailsUpdated, lockTime, deltaTime, time);
                     let DAYMILLIS = 24 * 60 * 60 * 1000;
                     let HOURMILLIS = 60 * 60 * 1000;
                     let MINUTEMILLIS = 60 * 1000;
@@ -1053,7 +1053,7 @@ function wrapper(plugin_info) {
                 ratingE6: info.rating * 1E6,
                 type: info.type,
                 typeNum: [null, 'Sequential', 'Non Sequential', 'Hidden'][info.type],
-                $lastUpdated: info.detailsModified
+                $detailsUpdated: info.detailsModified
             }
 
             if (info.waypoints) {
