@@ -114,6 +114,72 @@ function wrapper(plugin_info) {
         </div>
     `;
 
+    function encodeWaypoint(waypoint) {
+        let data = [
+            waypoint.hidden, // 0
+            waypoint.guid, // 1
+            waypoint.title, // 2
+            waypoint.typeNum, // 3
+            waypoint.objectiveNum, // 4
+            null // portal // 5 - null if unavailable
+        ]
+
+        if (waypoint.typeNum == 1) {
+
+            if (waypoint.portal) {
+                let portalData = [
+                    'p', // 0 - portal
+                    'N', // 1 - team (neutral)
+                    waypoint.portal.latE6, // 2 - lat
+                    waypoint.portal.lngE6, // 3 - lng
+                    1, // 4 - level
+                    0, // 5 - ?
+                    0, // 6 - ?
+                    null, // 7 - image url
+                    waypoint.title, // 8 - title
+                    [], // 9 - ?
+                    false, // 10 - ?
+                    false, // 11 - ?
+                    null, // 12 - ?
+                    Date.now() // 13 - last changed timestamp
+                ];
+                data[5] = portalData;
+            }
+
+        } else if (waypoint.typeNum == 2) {
+
+            if (waypoint.portal) {
+                let fieldtripData = [
+                    "f",
+                    waypoint.portal.latE6,
+                    waypoint.portal.lngE6
+                ];
+                data[5] = fieldtripData
+            }
+
+        }
+
+        return data;
+
+    }
+
+    function encodeMission(mission) {
+        let data = [
+            mission.guid, // 0
+            mission.title, // 1
+            mission.description, // 2
+            mission.authorNickname, // 3
+            mission.authorTeam, // 4
+            mission.ratingE6, // 5
+            mission.medianCompletionTimeMs, // 6
+            mission.numUniqueCompletedPlayers, // 7
+            mission.typeNum, // 8
+            mission.waypoints ? mission.waypoints.map(encodeWaypoint) : null, // 9
+            mission.image // 10
+        ]
+        return data;
+    }
+
     function getDialogButtons(dlg) {
 
         // get buttons
