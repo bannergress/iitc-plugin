@@ -780,8 +780,9 @@ function wrapper(plugin_info) {
                 {
                     text: 'Close',
                     click: () => {
-                        if (confirm("Close without saving?"))
-                            this.dlg.dialog("close");
+                        this.dlg.dialog("close");
+                        // if (confirm("Close without saving?"))
+                        //     this.dlg.dialog("close");
                     }
                 },
                 {
