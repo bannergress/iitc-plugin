@@ -17,6 +17,11 @@ function wrapper(plugin_info) {
 
     // PLUGIN START ////////////////////////////////////////////////////////
 
+    if (window.plugin.bannerIndexer) {
+        alert("BANNER INDEXER PLUGIN ALREADY INSTALLED - DO YOU HAVE 2 COPIES OF IT ??");
+        return;
+    }
+
     const PLUGIN = window.plugin.bannerIndexer = function () { };
 
     const MissionsControl = L.Control.extend({
