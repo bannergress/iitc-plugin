@@ -1796,7 +1796,7 @@ function wrapper(plugin_info) {
 
                     // query server and join results
                     let waitDlg = new PleaseWaitDialog();
-                    waitDlg.show(`Please wait, checking mission statuses.. (${context.missions.count})`);
+                    waitDlg.show(`Please wait, checking mission statuses.. (${context.missions.length})`);
                     context.updateElems();
 
                     setTimeout(() => { // for fake-delay testing
