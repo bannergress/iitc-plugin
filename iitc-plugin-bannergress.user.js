@@ -1224,11 +1224,9 @@ function wrapper(plugin_info) {
                     : [ missions.guid ];
             console.log("[bannergress] checking missions",  { missions, missionIds });
 
-            console.log("[bannergress/keyclock] checking if token is still valid..", { token: this.settings.token, refreshToken: this.settings.refreshToken });
-
             this.preflight(err => {
                 if (err) return callback(err);
-                console.log("[bannergress] checking which missions have been indexed..",);
+                console.log("[bannergress] checking which missions have been indexed..");
                 $.ajax({
                     type: 'POST',
                     contentType: "application/json; charset=utf-8",
@@ -1240,7 +1238,10 @@ function wrapper(plugin_info) {
                     data: JSON.stringify(missionIds)
                 }).then(res => {
                     console.log("[bannergress] check missions returned:", res);
-                    callback(null, []);
+                    let knownList = this.parseResponse(res);
+                    console.debug("[bannergress] parsed response: %o -> %o", res, knownList);
+                    callback(null, knownList);
+
                 }).catch(err => {
                     console.error("[bannergress] check missions failed:", err);
                     callback(err);
@@ -1249,11 +1250,48 @@ function wrapper(plugin_info) {
         }
 
         submitMission(mission, callback) {
+
+            console.log("[bannergress] converting mission plugin data to mission data", { mission });
+            let missionData = encodeMission(mission);
+            console.log("[bannergress] converted mission data", { missionData, mission });
             this.preflight(err => {
                 if (err) return callback(err);
-                // TODO: convert from missions plugin format back to ingress intel format
-                // TODO: submit
-            })
+                console.log("[bannergress] importing mission data..");
+                $.ajax({
+                    type: 'POST',
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    headers: {
+                        authorization: `Bearer ${this.settings.token}`
+                    },
+                    url: `${this.config.baseUrl}import/details`,
+                    data: JSON.stringify(missionData)
+                }).then(res => {
+                    console.log("[bannergress] import mission returned:", res);
+                    let knownList = this.parseResponse(res);
+                    callback(null, knownList);
+                }).catch(err => {
+                    console.error("[bannergress] import mission failed:", err);
+                    callback(err);
+                })
+            });
+
+        }
+
+        parseResponse(res) {
+            let knownList = [];
+            for (let guid in res) {
+                if (res.latestUpdateSummary != null || res.latestUpdateDetails != null) {
+                    let mission = res[guid];
+                    knownList.push({
+                        guid: guid,
+                        $summaryUpdated: Date.parse(mission.latestUpdateSummary),
+                        $detailsUpdated: Date.parse(mission.latestUpdateDetails)
+                    });
+                }
+            }
+            console.debug("[bannergress] parsed response: %o -> %o", res, knownList);
+            return knownList;
         }
 
         showSettings(el) {
