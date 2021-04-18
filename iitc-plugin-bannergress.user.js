@@ -793,10 +793,10 @@ function wrapper(plugin_info) {
                         let settings = plugin.settings;
 
                         // tweaks
-                        settings.batchMaxHard = batchMaxHardInput.val();
-                        settings.batchMinimumDelay = batchMinimumDelayInput.val();
-                        settings.batchRandomizeExtraDelay = batchRandomizeExtraDelayInput.val();
-                        settings.refreshLockTime = refreshLockTimeInput.val();
+                        settings.batchMaxHard = parseInt(batchMaxHardInput.val());
+                        settings.batchMinimumDelay = parseInt(batchMinimumDelayInput.val());
+                        settings.batchRandomizeExtraDelay = parseInt(batchRandomizeExtraDelayInput.val());
+                        settings.refreshLockTime = parseInt(refreshLockTimeInput.val());
 
                         // general
                         settings.mapControlEnabled = mapControlEnabledCbx.val() == "on";
