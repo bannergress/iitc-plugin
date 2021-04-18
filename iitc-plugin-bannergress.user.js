@@ -388,7 +388,7 @@ function wrapper(plugin_info) {
                 let lockedUntil = m.$known.$lastUpdated + lockTime;
                 let now = Date.now();
                 let deltaTime = lockedUntil - now;
-                let time = new Date(m.$lastUpdated).toLocaleDateString();
+                let time = new Date(m.$known.$lastUpdated).toLocaleDateString();
                 if (m.$known.$lastUpdated && deltaTime > 0) {
     
                     //console.log("MODIFIED", m.$known.$lastUpdated, lockTime, deltaTime, time);
