@@ -435,9 +435,10 @@ function wrapper(plugin_info) {
                             //console.log("DOWNLOAD OK!", updatedMission);
 
                             // re-apply filters if this is a list (remove etc)
-                            if (this.type == "list") {
-                                if (this.applyFilters) this.applyFilters();
-                            }
+                            // if (this.type == "list") {
+                            //     if (this.applyFilters) this.applyFilters();
+                            // }
+                            // ^TODO: FIXME: this scrolls the list to the top again...
 
                         } else {
                             // TODO: log error
