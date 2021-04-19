@@ -25,24 +25,37 @@ function wrapper(plugin_info) {
     const PLUGIN = window.plugin.bannerIndexer = function () { };
 
     const MissionsControl = L.Control.extend({
+        
         options: {
             position: 'topleft'
         },
+
         onAdd(map) {
 
             let el = $(`<div class="toggle-iitc-standard-layers-control leaflet-bar">
-                <a class="leaflet-bar-part miv-btn" ` + (isSmartphone() ? '' : 'title="Show missions in view"') + `>
-                    <div>🚩</div>                
-                </a>
-            </div>`);
+                            <a class="leaflet-bar-part miv-btn" ` + (isSmartphone() ? '' : 'title="Show missions in view"') + `>
+                                <div>🚩</div>                
+                            </a>
+                            <a class="leaflet-bar-part zoom-btn" ` + (isSmartphone() ? '' : 'title="Zoom to all portals visible"') + `>
+                                <div>🔍</div>                
+                            </a>
+                        </div>
+            `);
     
-            let btn = el.find(".miv-btn").first();
-            btn.click(ev => {
+            let mivBtn = el.find(".miv-btn").first();
+            mivBtn.click(ev => {
                 window.plugin.missions.openTopMissions()
             })
 
+            let zoomBtn = el.find(".zoom-btn").first();
+            zoomBtn.click(ev => {
+                let zoom = map.getZoom();
+                if (zoom < 15) map.setZoom(15);
+            })
+ 
             return el[0];
         }
+
     });
 
     PLUGIN.missionsListHtml = `
