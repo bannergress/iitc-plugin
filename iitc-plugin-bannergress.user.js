@@ -113,8 +113,13 @@ function wrapper(plugin_info) {
                                         </tr>
                                         <tr>
                                             <td><button class="bannerIndexer-move-west">◀W</td>
-                                            <td><button class="bannerIndexer-move-south">▼S</td>
+                                            <td><button class="bannerIndexer-move-update">Upd</td>
                                             <td><button class="bannerIndexer-move-east">▶E</td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td><button class="bannerIndexer-move-south">▼S</td>
+                                            <td></td>
                                         </tr>
                                     </table>
                                 </div>
@@ -508,7 +513,7 @@ function wrapper(plugin_info) {
 
         injectUI() {
 
-            const move = (latDelta, lngDelta) => {
+            const move = (latDelta, lngDelta, autoUpdate) => {
                 let c = map.getCenter();
                 let b = map.getBounds();
                 //console.log(c, b);
@@ -517,10 +522,12 @@ function wrapper(plugin_info) {
                 let lat = c.lat + latDelta*dy;
                 let lng = c.lng + lngDelta*dx;
                 map.panTo([ lat, lng ], { animate: false });
-                setTimeout(() => {
-                    this.dialog.dialog('close');
-                    MISSIONS_PLUGIN.openTopMissions();
-                }, 250);
+                if (autoUpdate) {
+                    setTimeout(() => {
+                        this.dialog.dialog('close');
+                        MISSIONS_PLUGIN.openTopMissions();
+                    }, 250);
+                }
             }
             
             function zpad(text, minLength) {
@@ -575,13 +582,13 @@ function wrapper(plugin_info) {
             //$('#bannerIndexer-hide-unnumbered-filter').prop("checked", previousFilters.excludeUnnumbered);
             //$('#bannerIndexer-sort-filter:checked').prop("checked", previousFilters.sortAlpha);
 
-            elems.find(".bannerIndexer-move-north").click(() => move(1, 0));
-            elems.find(".bannerIndexer-move-south").click(() => move(-1, 0));
-            elems.find(".bannerIndexer-move-west").click(() => move(0, -1));
-            elems.find(".bannerIndexer-move-east").click(() => move(0, 1));
-            // elems.find(".bannerIndexer-refresh-list").click(() => {
-            //     MISSIONS_PLUGIN.openTopMissions();
-            // });
+            elems.find(".bannerIndexer-move-north").click(() => move(1, 0, false));
+            elems.find(".bannerIndexer-move-south").click(() => move(-1, 0, false));
+            elems.find(".bannerIndexer-move-west").click(() => move(0, -1, false));
+            elems.find(".bannerIndexer-move-east").click(() => move(0, 1, false));
+            elems.find(".bannerIndexer-move-update").click(() => {
+                MISSIONS_PLUGIN.openTopMissions();
+            });
 
             const getFilteredMissions = (forceOnlyDownloadable) => {
 
