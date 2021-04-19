@@ -447,10 +447,14 @@ function wrapper(plugin_info) {
             return ours;
         }
 
+        isIndexed(known) {
+            return (known.waypoints || known.$detailsUpdated);
+        }
+
         getStatus(m) {
             if (m && m.$pending) {
                 return { id: 'pending', icon: '⏳', text: 'Updating', title: 'Updating...', locked: true };
-            } else if (m.$known && (m.$known.waypoints || m.$known.$detailsUpdated)) {
+            } else if (m.$known && this.isIndexed(m.$known)) {
                 // known and indexed - check if it was done recently
                 let lockTime = this.plugin.settings.refreshLockTime;
                 let lockedUntil = m.$known.$detailsUpdated + lockTime;
@@ -1321,8 +1325,13 @@ function wrapper(plugin_info) {
                     data: JSON.stringify(missionData)
                 }).then(res => {
                     console.log("[bannergress] import mission returned:", res);
+
+                    if (res.latestUpdateDetails) { // actual api deviates from doc
+                        res = { [mission.guid]: res }
+                    }
+
                     let knownList = this.parseResponse(res);
-                    callback(null, knownList);
+                    callback(null, knownList.find(x => x.guid == mission.guid));
                 }).catch(err => {
                     console.error("[bannergress] import mission failed:", err);
                     callback(err);
@@ -1334,8 +1343,8 @@ function wrapper(plugin_info) {
         parseResponse(res) {
             let knownList = [];
             for (let guid in res) {
-                if (res.latestUpdateSummary != null || res.latestUpdateDetails != null) {
-                    let mission = res[guid];
+                let mission = res[guid];
+                if (mission.latestUpdateSummary != null || mission.latestUpdateDetails != null) {
                     knownList.push({
                         guid: guid,
                         $summaryUpdated: Date.parse(mission.latestUpdateSummary),
@@ -1363,7 +1372,13 @@ function wrapper(plugin_info) {
                     } else {
                         if (res) {
                             console.log("[bannergress] authenticated")
-                            el.append("<span>Authenticated!</span>");
+                            el.append("<span>Authenticated!</span><br>");
+                            el.append($("<button>", {
+                                text: "Log out",
+                                click: () => {
+                                    this.keycloak.logout(window.location.href);
+                                }
+                            }))
                         } else {
                             console.log("[bannergress] not authenticated, need login");
                             el.append(
@@ -1867,9 +1882,7 @@ function wrapper(plugin_info) {
                                 statuses.forEach(status => {
                                     let mission = context.missions.find(c => c.guid == status.guid);
                                     if (mission) {
-                                        if (status.waypoints) {
-                                            mission.$known = status;
-                                        }
+                                        mission.$known = status;
                                     } else {
                                         console.error("ERROR: Server returned status for mission we did not ask for?", status);
                                     }
