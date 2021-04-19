@@ -446,7 +446,7 @@ function wrapper(plugin_info) {
                             // ^TODO: FIXME: this scrolls the list to the top again...
 
                         } else {
-                            // TODO: log error
+                            alert("ERROR!\n\nAn error occurred while processing mission details:\n\n" + err.message);
                             console.log("DOWNLOAD ERROR", err);
                         }
                     });
@@ -748,6 +748,10 @@ function wrapper(plugin_info) {
                                     console.log("batch: download mission completed:", { cur, err, mission })
                                     
                                     if (err) {
+                                        if (err.isCritical) {
+                                            alert("ERROR!\n\nAn error occurred while submitting the mission details - please log in again!")
+                                            this.stopBatch = true;
+                                        }
                                         errCount++;
                                         failed.push(cur);
                                     } else {
@@ -1088,7 +1092,9 @@ function wrapper(plugin_info) {
                 let knownMissions = res.results.map(this.convertToMissionsPluginFormat);
                 console.log("[specops] known missions", { knownMissions });
                 callback(null, knownMissions);
-            }).catch(function(err) {
+            }).catch(function(xhr) {
+                console.error("Error checking mission statuses, XHR=", xhr);
+                let err = new Error(`Error checking mission statuses (XHR: ${xhr.responseText})`)
                 callback(err);
             })
 
@@ -1243,11 +1249,11 @@ function wrapper(plugin_info) {
             let keycloakConfigUrl = "data:application/json;base64," + btoa(JSON.stringify(this.config.keycloak));
 
             if (this.keycloak == null) {
-                console.log("[bannergress/keycloak] creating interface..")
+                console.log("[bannergress] creating interface..")
                 this.keycloak = new Keycloak(keycloakConfigUrl);
             }
 
-            console.log("[bannergress/keycloak] initializing..");
+            console.log("[bannergress] initializing..");
             try {
                 this.keycloak.init({
                     token: this.settings.token,
@@ -1272,16 +1278,18 @@ function wrapper(plugin_info) {
 
         login(callback) {
             if (!this.isAuthenticated) {
-                this.keycloak.login();
-                // callback(); // XXX ???
+                this.keycloak.login() //({ scope: 'import-data' })
+                .then(() => callback(null))
+                .catch(err => callback(err));
             }
         }
 
         preflight(callback) {
             const plugin = this.plugin;
 
+            console.log("[bannergress] performing preflight..");
             this.keycloak.updateToken(30).then((refreshed) => {
-                console.log("[bannergress/keycloak] token was " + (refreshed ? "refreshed" : "still valid"),  { token: this.settings.token, refreshToken: this.settings.refreshToken });
+                console.log("[bannergress] token was " + (refreshed ? "refreshed" : "still valid"),  { token: this.settings.token, refreshToken: this.settings.refreshToken });
                 if (refreshed) {
                     this.settings.token = this.keycloak.token;
                     this.settings.refreshToken = this.keycloak.refreshToken;
@@ -1290,8 +1298,14 @@ function wrapper(plugin_info) {
                 callback(null);
             }).catch(err => {
                 console.error("[bannergress] error refreshing token, you have to log in again!", err);
-                callback(new Error("Error refreshing token, you have to log in again! (" + err.message + ")"));
-                //callback(err);
+                callback(new Error("Error refreshing access token, you will have to log in again via the options dialog!"));
+                // this.checkAuth((err, res) => {
+                //     if (err) {
+                //         console.error("[bannergress] error refreshing token, you have to log in again!", err);
+                //         callback(new Error("Error refreshing access token, you have to log in again!"));
+                //     }
+                //     else callback(null);
+                // });
             })
         }
 
@@ -1320,8 +1334,9 @@ function wrapper(plugin_info) {
                     console.debug("[bannergress] parsed response: %o -> %o", res, knownList);
                     callback(null, knownList);
 
-                }).catch(err => {
-                    console.error("[bannergress] check missions failed:", err);
+                }).catch(xhr => {
+                    console.error("[bannergress] Error checking mission statuses, XHR=", xhr);
+                    let err = new Error(`Error checking mission statuses (XHR: ${xhr.responseText})`)
                     callback(err);
                 })
             });
@@ -1353,8 +1368,9 @@ function wrapper(plugin_info) {
 
                     let knownList = this.parseResponse(res);
                     callback(null, knownList.find(x => x.guid == mission.guid));
-                }).catch(err => {
-                    console.error("[bannergress] import mission failed:", err);
+                }).catch(xhr => {
+                    console.error("[bannergress] import mission failed:", xhr);
+                    let err = new Error("Failed to submit mission details to server (XHR: " + xhr.statusText + ")");
                     callback(err);
                 })
             });
@@ -1383,39 +1399,55 @@ function wrapper(plugin_info) {
             let checking = $("<span>Checking login status..</span>");
             el.append(checking);
             this.initialize((err) => {
-                console.log("[bannergress] checking authentication status..")
+                console.log("[bannergress] checking authentication status..");
+
+                const onLoggedIn = () => {
+                    console.log("[bannergress] authenticated")
+                    el.append("<span>Authenticated!</span><br>");
+                    el.append($("<button>", {
+                        text: "Log out",
+                        click: () => {
+                            this.keycloak.logout(window.location.href);
+                        }
+                    }))
+                }
+
+                const onLoggedOut = () => {
+                    console.log("[bannergress] not authenticated, need login");
+                    el.append(
+                        $("<button>", {
+                            text: "Log in",
+                            click: () => {
+                                // this will redirect via an external site, so 
+                                // we need to set this as the provider and save
+                                // settings
+                                plugin.provider = this;
+                                plugin.saveSettings();
+                                console.log("[bannergress] login");
+                                if (this.isAuthenticated) this.keycloak.logout();
+                                this.login();
+                            }
+                        })
+                    )
+                }
+
                 this.checkAuth((err, res) => {
                     console.log({ err, res });
-                    checking.remove();
                     if (err) {
+                        checking.remove();
                         console.error("[bannergress] error checking authentication", err)
                         el.append("Error checking authentication: " + err);
                     } else {
                         if (res) {
-                            console.log("[bannergress] authenticated")
-                            el.append("<span>Authenticated!</span><br>");
-                            el.append($("<button>", {
-                                text: "Log out",
-                                click: () => {
-                                    this.keycloak.logout(window.location.href);
-                                }
-                            }))
+                            // keycloak *MAY* say the token is ok here even if it is invalidated......
+                            this.preflight(err => {
+                                checking.remove();
+                                if (err) onLoggedOut();
+                                else onLoggedIn();
+                            });
                         } else {
-                            console.log("[bannergress] not authenticated, need login");
-                            el.append(
-                                $("<button>", {
-                                    text: "Log in",
-                                    click: () => {
-                                        // this will redirect via an external site, so 
-                                        // we need to set this as the provider and save
-                                        // settings
-                                        plugin.provider = this;
-                                        plugin.saveSettings();
-                                        console.log("[bannergress] login");
-                                        this.login();
-                                    }
-                                })
-                            )
+                            checking.remove();
+                            onLoggedOut();
                         }
                     }
                 })
@@ -1579,6 +1611,7 @@ function wrapper(plugin_info) {
                         if (err) {
 
                             console.error("ERROR SUBMITTING TO BACKEND:", err);
+                            err.isCritical = true;
                             mission.$context.updateElem(mission);
                             if (callback) callback(err);
 
@@ -1897,6 +1930,7 @@ function wrapper(plugin_info) {
                         PLUGIN.provider.checkMissions(context.missions, (err, statuses) => {
                             waitDlg.close();
                             if (err) {
+                                alert("ERROR! There was an error checking mission statuses:\n\n" + err.message);
                                 console.error("ERROR: Failed to check missions statuses:", err);
                             } else {
                                 //console.log("CHECKED", statuses);
