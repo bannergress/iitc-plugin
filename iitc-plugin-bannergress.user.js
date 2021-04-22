@@ -951,8 +951,7 @@ function wrapper(plugin_info) {
                         batchRandomizeExtraDelayInput = $(".bannerIndexer-settings-dialog-batchRandomizeExtraDelay").first();
                         refreshLockTimeInput = $(".bannerIndexer-settings-dialog-refreshLockTime").first();
                         
-                        if (settings.mapControlEnabled)
-                            mapControlEnabledCbx.attr("checked", "checked");
+                        if (settings.mapControlEnabled) mapControlEnabledCbx.attr("checked", "checked");
                         if (settings.moveAutoRefresh) moveAutoRefreshCbx.attr("checked", "checked");
 
                         batchMaxUserInput.attr("max", settings.batchMaxHard);
