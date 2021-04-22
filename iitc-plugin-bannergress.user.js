@@ -714,18 +714,23 @@ function wrapper(plugin_info) {
                 this.stopBatch = false;
                 let filteredMissions = getFilteredMissions(true); // only get the ones we're supposed to be downloading (exclude locked ones)
 
-                if (filteredMissions.length > this.plugin.settings.batchMaxUser) {
-                    filteredMissions = filteredMissions.slice(0, this.plugin.settings.batchMaxUser);
-                }
-
+                // apply hard limit
+                if (filteredMissions.length > this.plugin.settings.batchMaxHard) {
+                    filteredMissions = filteredMissions.slice(0, this.plugin.settings.batchMaxHard);
+                }             
+                
                 if (filteredMissions.length == 0) {
                     alert("There are no missions to process - please adjust your filters or move to an area with some missions!");
                     return;
                 }
 
+                let confirmAmount = (filteredMissions.length > this.plugin.settings.batchMaxUser);
+
                 if (filteredMissions.length > 0) {
-                    if (!confirm(`This will process ${filteredMissions.length} mission${filteredMissions.length != 1 ? 's' : ''} - are you sure you want to continue?`))
-                        return;
+                    if (confirmAmount) {
+                        if (!confirm(`This will process ${filteredMissions.length} mission${filteredMissions.length != 1 ? 's' : ''} - are you sure you want to continue?`))
+                            return;
+                    }
 
                     let funs = elems.find(".bannerIndexer-functions");
 
@@ -879,7 +884,7 @@ function wrapper(plugin_info) {
                         <legend>General</legend>
                         <table>
                             <tr>
-                                <td>Max number of missions to batch process:</td>
+                                <td>Prompt if more than this number of missions to batch process</td>
                                 <td><input class="bannerIndexer-settings-dialog-batchMaxUser" style="width: 100%" type="number" min="1"></td>
                             </tr>
                             <tr>
@@ -1685,7 +1690,7 @@ function wrapper(plugin_info) {
             batchMinimumDelay: 500,
             batchRandomizeExtraDelay: 1000,
             batchMaxHard: 1000,
-            batchMaxUser: 200,
+            batchMaxUser: 50,
             mapControlEnabled: true,
             refreshLockTime: 7 * 24 * 60 * 60 * 1000
         }, getKey("plugin.bannerIndexer.settings") || {});
