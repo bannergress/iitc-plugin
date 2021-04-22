@@ -409,20 +409,6 @@ function wrapper(plugin_info) {
             this.id = Math.round(0xFFFFFFFF * Math.random()) + '_' + Date.now();
         }
 
-        replaceResult(old_m, m) {
-
-            // save new
-            m.mission = old_m.mission;
-            m.elem = old_m.elem;
-        
-            // replace in results array
-            this.missions = this.missions.map(function(r) {
-                return r == old_m ? m : r;
-            })
-        
-            this.updateStatus(m);
-        }
-
         updateElems() {
             this.missions.forEach(mission => {
                 this.updateElem(mission);
