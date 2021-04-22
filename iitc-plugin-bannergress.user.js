@@ -1856,6 +1856,12 @@ function wrapper(plugin_info) {
         const PLUGIN = window.plugin.bannerIndexer;
         const MISSIONS_PLUGIN = window.plugin.missions;
 
+        // FIXME: TODO: work out a better way of resolving this conflict:
+        // remove the missions add-on event listener which will overwrite our updated elements..
+        if (window.plugin.missionsAddon) {
+            window.removeHook('plugin-missions-loaded-mission', window.plugin.missionsAddon.updateMissionListItem);
+        }
+
         $("#toolbox").append(
             $("<a>", {
                 text: "Banner indexer opt",
