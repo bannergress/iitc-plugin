@@ -1630,7 +1630,20 @@ function wrapper(plugin_info) {
 
                 function loadMissionOk(details) {
 
+                    const MISSIONS_PLUGIN = window.plugin.missions;
+
                     console.log("MISSION LOADED:", details);
+
+                    // import new data
+                    for (let key in details) mission[key] = details[key];
+                    try {
+                        let oldEl = mission.$elem;
+                        console.debug("re-rendering mission summary element", mission, oldEl);
+                        let newEl = MISSIONS_PLUGIN.renderMissionSummary(mission);
+                        oldEl.replaceWith(newEl);
+                    } catch (err) {
+                        console.error("error re-rendering mission summary element", mission, err);
+                    }
 
                     console.log("SUBMITTING TO BACKEND..");
 
