@@ -903,7 +903,7 @@ function wrapper(plugin_info) {
                             </tr>
                         </table>
                     </fieldset>
-                    <fieldset class="tweaks">
+                    <fieldset class="tweaks" style="margin-top: 1em">
                         <legend>Tweaks</legend>
                         <table>
                             <tr>
@@ -966,6 +966,8 @@ function wrapper(plugin_info) {
                         if (localStorage.getItem("BANNERINDEXER_TWEAKS") != null) {
                             $(".bannerIndexer-settings-dialog .tweaks").show();
                         }
+
+                        this.dlg.dialog("option", "position", {my: "center", at: "center", of: window});
                         
                         //console.log("select", select);
                         for (let key in plugin.integrations) {
