@@ -518,7 +518,8 @@ function wrapper(plugin_info) {
 
         injectUI() {
 
-            const move = (latDelta, lngDelta, autoUpdate) => {
+            const move = (latDelta, lngDelta) => {
+                /*
                 let c = map.getCenter();
                 let b = map.getBounds();
                 //console.log(c, b);
@@ -527,12 +528,20 @@ function wrapper(plugin_info) {
                 let lat = c.lat + latDelta*dy;
                 let lng = c.lng + lngDelta*dx;
                 map.panTo([ lat, lng ], { animate: false });
-                if (autoUpdate) {
+                */
+                let bounds = map.getPixelBounds();
+                let width =  Math.abs(bounds.max.x - bounds.min.x);
+                let height = Math.abs(bounds.max.y - bounds.min.y);
+                let offset = new L.Point(lngDelta * width, -latDelta * height);
+                map.panBy(offset, { animate: false });
+
+                if (this.plugin.settings.moveAutoRefresh) {
                     setTimeout(() => {
                         this.dialog.dialog('close');
                         MISSIONS_PLUGIN.openTopMissions();
                     }, 250);
                 }
+
             }
             
             function zpad(text, minLength) {
@@ -587,11 +596,12 @@ function wrapper(plugin_info) {
             //$('#bannerIndexer-hide-unnumbered-filter').prop("checked", previousFilters.excludeUnnumbered);
             //$('#bannerIndexer-sort-filter:checked').prop("checked", previousFilters.sortAlpha);
 
-            elems.find(".bannerIndexer-move-north").click(() => move(1, 0, false));
-            elems.find(".bannerIndexer-move-south").click(() => move(-1, 0, false));
-            elems.find(".bannerIndexer-move-west").click(() => move(0, -1, false));
-            elems.find(".bannerIndexer-move-east").click(() => move(0, 1, false));
+            elems.find(".bannerIndexer-move-north").click(() => move(1, 0));
+            elems.find(".bannerIndexer-move-south").click(() => move(-1, 0));
+            elems.find(".bannerIndexer-move-west").click(() => move(0, -1));
+            elems.find(".bannerIndexer-move-east").click(() => move(0, 1));
             elems.find(".bannerIndexer-move-update").click(() => {
+                this.dialog.dialog('close');
                 MISSIONS_PLUGIN.openTopMissions();
             });
 
@@ -809,6 +819,7 @@ function wrapper(plugin_info) {
                 batchMaxUserInput,
                 providerAreaDiv,
                 providerSelect,
+                moveAutoRefreshCbx,
                 batchMaxHardInput, batchMinimumDelayInput, batchRandomizeExtraDelayInput, refreshLockTimeInput
 
             let buttons = [
@@ -834,6 +845,7 @@ function wrapper(plugin_info) {
 
                         // general
                         settings.mapControlEnabled = mapControlEnabledCbx.val() == "on";
+                        settings.moveAutoRefresh = moveAutoRefreshCbx.val() == "on";
                         settings.batchMaxUser = Math.min(settings.batchMaxHard, parseInt(batchMaxUserInput.val()));
                         settings.provider = providerSelect.val();
 
@@ -869,6 +881,10 @@ function wrapper(plugin_info) {
                             <tr>
                                 <td>Max number of missions to batch process:</td>
                                 <td><input class="bannerIndexer-settings-dialog-batchMaxUser" style="width: 100%" type="number" min="1"></td>
+                            </tr>
+                            <tr>
+                                <td>Automatically refresh missions list on N/E/S/W buttons</td>
+                                <td><input type="checkbox" class="bannerIndexer-settings-dialog-moveAutoRefresh" /></td>
                             </tr>
                             <tr>
                                 <td>Enable map controls</td>
@@ -924,6 +940,7 @@ function wrapper(plugin_info) {
                         mapControlEnabledCbx = $(".bannerIndexer-settings-dialog-mapControlEnabled").first();
                         batchMaxUserInput = $(".bannerIndexer-settings-dialog-batchMaxUser").first();
 
+                        moveAutoRefreshCbx = $(".bannerIndexer-settings-dialog-moveAutoRefresh").first();
                         batchMaxHardInput = $(".bannerIndexer-settings-dialog-batchMaxHard").first();
                         batchMinimumDelayInput = $(".bannerIndexer-settings-dialog-batchMinimumDelay").first();
                         batchRandomizeExtraDelayInput = $(".bannerIndexer-settings-dialog-batchRandomizeExtraDelay").first();
@@ -931,6 +948,7 @@ function wrapper(plugin_info) {
                         
                         if (settings.mapControlEnabled)
                             mapControlEnabledCbx.attr("checked", "checked");
+                        if (settings.moveAutoRefresh) moveAutoRefreshCbx.attr("checked", "checked");
 
                         batchMaxUserInput.attr("max", settings.batchMaxHard);
                         batchMaxUserInput.val(settings.batchMaxUser);
@@ -1663,6 +1681,7 @@ function wrapper(plugin_info) {
 
         this.settings = Object.assign({
             provider: 'disabled',
+            moveAutoRefresh: true,
             batchMinimumDelay: 500,
             batchRandomizeExtraDelay: 1000,
             batchMaxHard: 1000,
