@@ -2,7 +2,7 @@
 // @id             bannerIndexer-missions-addon
 // @name           IITC Plugin: Banner indexer add-on for missions
 // @category       Misc
-// @version        0.4.11
+// @version        0.4.12
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @description    Banner indexer add-on for missions plugin
 // @match          https://intel.ingress.com/*
@@ -416,6 +416,8 @@ function wrapper(plugin_info) {
         }
 
         updateElem(mission, suppressBroadcast) {
+
+            const MISSIONS_PLUGIN = window.plugin.missions;
 
             let status = this.getStatus(mission);
             //console.error("updateElem()", status.id, mission.guid, mission.title);
