@@ -220,6 +220,22 @@ function wrapper(plugin_info) {
         dlg.dialog('option', 'buttons', buttons);
     }
 
+    function updateMissionCache(mission) {
+        // update missions plugin cache also
+        try {
+            //console.debug("updating missions cache for " + mission.guid);
+            let cloned = JSON.parse(JSON.stringify(mission));
+            window.runHooks('plugin-missions-loaded-mission', { mission: cloned });
+            window.plugin.missions.cacheByMissionGuid[mission.guid] = {
+                data: cloned,
+                time: Date.now()
+            }
+            window.plugin.missions.storeCache();
+        } catch (err) {
+            console.error("Error updating missions plugin cache:", err);
+        }
+    }
+
     function getMissionDetails(guid, callback, errorcallback) {
 
         // The window.plugin.missions.loadMission() method is broken in 2 ways
@@ -239,6 +255,9 @@ function wrapper(plugin_info) {
             try {
                 let mission = decodeMission(data.result);
                 console.log("DECODED INTEL DATA", mission);
+
+                updateMissionCache(mission);
+
                 if (!mission) errorcallback(new Error("Invalid data"));
                 else callback(mission);
             } catch (err) {
