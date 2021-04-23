@@ -2,7 +2,7 @@
 // @id             bannerIndexer-missions-addon
 // @name           IITC Plugin: Banner indexer add-on for missions
 // @category       Misc
-// @version        0.4.12
+// @version        0.4.13
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @description    Banner indexer add-on for missions plugin
 // @match          https://intel.ingress.com/*
@@ -316,12 +316,10 @@ function wrapper(plugin_info) {
 
     class ProgressDialog {
 
-        plugin = null;
-        dialog = null;
-        stopCallback = null;
-
         constructor(plugin, stopCallback) {
+            this.plugin = plugin;
             this.stopCallback = stopCallback;
+            this.dialog = null;
         }
 
         show(callback) {
@@ -388,24 +386,14 @@ function wrapper(plugin_info) {
 
     class DialogContext {
 
-        missions = [];
-        
-        origin = null;
-
-        dialog = null;
-
-        plugin = null;
-
-        id = null;
-
-        stopBatch = false;
-
-        type = ''; // list | single
-        
         constructor(plugin, type) {
             this.plugin = plugin;
             this.type = type;
             this.id = Math.round(0xFFFFFFFF * Math.random()) + '_' + Date.now();
+            this.missions = [];
+            this.origin = null;
+            this.dialog = null;
+            this.stopBatch = false;
         }
 
         updateElems() {
@@ -809,11 +797,9 @@ function wrapper(plugin_info) {
 
     class SettingsDialog {
 
-        plugin = null;
-        dlg = null;
-
         constructor(plugin) {
             this.plugin = plugin;
+            this.dlg = null;
         }
 
         show() {
@@ -1013,14 +999,11 @@ function wrapper(plugin_info) {
 
     class PleaseWaitDialog {
 
-        plugin = null;
-        dlg = null;
-        cancelled = false;
-        cancelCallback = null;
-
         constructor(plugin, cancelCallback) {
             this.plugin = plugin;
             this.cancelCallback = cancelCallback;
+            this.dlg = null;
+            this.cancelled = false;
         }
 
         show(text) {
@@ -1054,24 +1037,21 @@ function wrapper(plugin_info) {
 
     class SpecOpsQuestIntegration {
 
-        id = 'specops';
-
-        name = "SpecOps.Quest";
-
-        config = {
-            baseUrl: "https://specops.quest/api/"
-        }
-
-        settings = {
-            apikey: ''
-        }
-
-        isAuthenticated = false;
-
-        plugin = null;
-
         constructor(plugin) {
             this.plugin = plugin;
+
+            this.id = 'specops';
+            this.name = "SpecOps.Quest";
+
+            this.config = {
+                baseUrl: "https://specops.quest/api/"
+            }
+
+            this.settings = {
+                apikey: ''
+            }
+
+            this.isAuthenticated = false;
         }
 
         initialize(callback) {
@@ -1228,32 +1208,31 @@ function wrapper(plugin_info) {
 
     class BannergressIntegration {
 
-        id =  'bannergress';
-
-        name = "Bannergress";
-
-        config = {
-            keycloak: {
-                "realm": "bannergress-test",
-                "auth-server-url": "https://login.bannergress.com/auth/",
-                "ssl-required": "external",
-                "resource": "bannergress-iitc-plugin",
-                "public-client": true,
-                "confidential-port": 0
-            },
-            baseUrl: "https://test.api.bannergress.com/"
-        };
-
-        settings = {
-            subject: null,
-            token: null,
-            refreshToken: null
-        }
-
-        plugin = null;
-
         constructor(plugin) {
             this.plugin = plugin;
+
+            this.id =  'bannergress';
+
+            this.name = "Bannergress";
+    
+            this.config = {
+                keycloak: {
+                    "realm": "bannergress-test",
+                    "auth-server-url": "https://login.bannergress.com/auth/",
+                    "ssl-required": "external",
+                    "resource": "bannergress-iitc-plugin",
+                    "public-client": true,
+                    "confidential-port": 0
+                },
+                baseUrl: "https://test.api.bannergress.com/"
+            };
+    
+            this.settings = {
+                subject: null,
+                token: null,
+                refreshToken: null
+            }
+    
         }
 
         initialize(callback) {
