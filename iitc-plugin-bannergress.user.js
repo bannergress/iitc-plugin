@@ -321,7 +321,6 @@ function wrapper(plugin_info) {
         stopCallback = null;
 
         constructor(plugin, stopCallback) {
-            this.plugin = plugin_info;
             this.stopCallback = stopCallback;
         }
 
