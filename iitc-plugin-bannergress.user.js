@@ -1232,7 +1232,8 @@ function wrapper(plugin_info) {
                 token: null,
                 refreshToken: null
             }
-    
+
+            this.isAuthenticated = false;
         }
 
         initialize(callback) {
@@ -1247,8 +1248,6 @@ function wrapper(plugin_info) {
                 callback(err);
             })
         }
-
-        isAuthenticated = false;
 
         checkAuth(callback) {
             
