@@ -2,7 +2,7 @@
 // @id             bannerIndexer-missions-addon
 // @name           IITC Plugin: Banner indexer add-on for missions
 // @category       Misc
-// @version        0.4.14
+// @version        0.4.15
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @description    Banner indexer add-on for missions plugin
 // @match          https://intel.ingress.com/*
@@ -1082,24 +1082,32 @@ function wrapper(plugin_info) {
                 
             console.log("[specops] checking which missions have been indexed..", { missions, missionIds });
 
-            let checkUrl = this.config.baseUrl + 'missions/guids?apiKey=' + encodeURIComponent(this.settings.apikey);
-            console.debug(checkUrl);
-            let promise = $.ajax({
-                type: 'POST',
-                contentType: "application/json; charset=utf-8",
-                dataType: "json",
-                url: checkUrl,
-            data: JSON.stringify(missionIds)
-            });
-
-            // let submitUrl = this.config.baseUrl + 'missions?format=missionsplugin&apiKey=' + encodeURIComponent(this.settings.apikey);
+            // let checkUrl = this.config.baseUrl + 'missions/guids?apiKey=' + encodeURIComponent(this.settings.apikey);
+            // console.debug(checkUrl);
             // let promise = $.ajax({
             //     type: 'POST',
             //     contentType: "application/json; charset=utf-8",
             //     dataType: "json",
-            //     url: submitUrl,
-            //     data: JSON.stringify(missions)
-            // })
+            //     url: checkUrl,
+            // data: JSON.stringify(missionIds)
+            // });
+
+            // remove the $context etc vars which can't be serialized
+            let missionStripped = missions.map(m => {
+                let mm = {};
+                for (let key in m) {
+                    if (!/^\$/.test(key)) mm[key] = m[key];
+                }
+                return mm;
+            })
+            let submitUrl = this.config.baseUrl + 'missions?format=missionsplugin&apiKey=' + encodeURIComponent(this.settings.apikey);
+            let promise = $.ajax({
+                type: 'POST',
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                url: submitUrl,
+                data: JSON.stringify(missionStripped)
+            })
             
             promise.then((res) => {
                 console.log("[specops] got response for known missions", res);
