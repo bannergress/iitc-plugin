@@ -2,7 +2,7 @@
 // @id             bannerIndexer-missions-addon
 // @name           IITC Plugin: Banner indexer add-on for missions
 // @category       Misc
-// @version        0.4.13
+// @version        0.4.14
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @description    Banner indexer add-on for missions plugin
 // @match          https://intel.ingress.com/*
@@ -24,39 +24,43 @@ function wrapper(plugin_info) {
 
     const PLUGIN = window.plugin.bannerIndexer = function () { };
 
-    const MissionsControl = L.Control.extend({
+    PLUGIN.registerMissionsControl = function() {
+
+        PLUGIN.MissionsControl = L.Control.extend({
         
-        options: {
-            position: 'topleft'
-        },
-
-        onAdd(map) {
-
-            let el = $(`<div class="toggle-iitc-standard-layers-control leaflet-bar">
-                            <a class="leaflet-bar-part miv-btn" ` + (isSmartphone() ? '' : 'title="Show missions in view"') + `>
-                                <div>🚩</div>                
-                            </a>
-                            <a class="leaflet-bar-part zoom-btn" ` + (isSmartphone() ? '' : 'title="Zoom to all portals visible"') + `>
-                                <div>🔍</div>                
-                            </a>
-                        </div>
-            `);
+            options: {
+                position: 'topleft'
+            },
     
-            let mivBtn = el.find(".miv-btn").first();
-            mivBtn.click(ev => {
-                window.plugin.missions.openTopMissions()
-            })
+            onAdd(map) {
+    
+                let el = $(`<div class="toggle-iitc-standard-layers-control leaflet-bar">
+                                <a class="leaflet-bar-part miv-btn" ` + (isSmartphone() ? '' : 'title="Show missions in view"') + `>
+                                    <div>🚩</div>                
+                                </a>
+                                <a class="leaflet-bar-part zoom-btn" ` + (isSmartphone() ? '' : 'title="Zoom to all portals visible"') + `>
+                                    <div>🔍</div>                
+                                </a>
+                            </div>
+                `);
+        
+                let mivBtn = el.find(".miv-btn").first();
+                mivBtn.click(ev => {
+                    window.plugin.missions.openTopMissions()
+                })
+    
+                let zoomBtn = el.find(".zoom-btn").first();
+                zoomBtn.click(ev => {
+                    let zoom = map.getZoom();
+                    if (zoom < 15) map.setZoom(15);
+                })
 
-            let zoomBtn = el.find(".zoom-btn").first();
-            zoomBtn.click(ev => {
-                let zoom = map.getZoom();
-                if (zoom < 15) map.setZoom(15);
-            })
- 
-            return el[0];
-        }
-
-    });
+                return el[0];
+            }
+    
+        });
+    
+    }
 
     PLUGIN.missionsListHtml = `
         <div>
@@ -2084,10 +2088,10 @@ function wrapper(plugin_info) {
     }.bind(PLUGIN);
 
     PLUGIN.setupMapControls = function() {
-
+        
         if (this.settings.mapControlEnabled) {
             if (!this.mapControl) 
-                this.mapControl = new MissionsControl();
+                this.mapControl = new PLUGIN.MissionsControl();
                 map.addControl(this.mapControl);
         } else {
             if (this.mapControl) {
@@ -2106,6 +2110,7 @@ function wrapper(plugin_info) {
 
         this.setupCSS();
         this.loadSettings();
+        this.registerMissionsControl();
 
         console.log("INITIALIZING..");
         this.provider.initialize(err => {
