@@ -1968,7 +1968,7 @@ function wrapper(plugin_info) {
 
                         context.updateElems();
 
-                        let jobSize = 50;
+                        let jobSize = 250;
                         let jobs = [];
                         let results = [];
     
