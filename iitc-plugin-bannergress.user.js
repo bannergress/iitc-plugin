@@ -2,7 +2,7 @@
 // @id             bannerIndexer-missions-addon
 // @name           IITC Plugin: Banner indexer add-on for missions
 // @category       Misc
-// @version        0.4.15
+// @version        0.4.16
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @description    Banner indexer add-on for missions plugin
 // @match          https://intel.ingress.com/*
@@ -1955,20 +1955,64 @@ function wrapper(plugin_info) {
                     $(dialog).attr("data-bannerindexer-context", context.id);
 
                     // query server and join results
-                    let waitDlg = new PleaseWaitDialog();
-                    waitDlg.show(`Please wait, checking mission statuses.. (${context.missions.length})`);
-                    context.updateElems();
+                    let stopCheck = false;
+                    let waitDlg = new ProgressDialog(PLUGIN, () => {
+                        stopCheck = true;
+                    })
 
-                    setTimeout(() => { // for fake-delay testing
+                    waitDlg.show(() => {
 
-                        PLUGIN.provider.checkMissions(context.missions, (err, statuses) => {
-                            waitDlg.close();
-                            if (err) {
-                                alert("ERROR! There was an error checking mission statuses:\n\n" + err.message);
-                                console.error("ERROR: Failed to check missions statuses:", err);
+                        waitDlg.setExtra("");
+                        waitDlg.setProgress(0, 1);
+                        waitDlg.setStatus("");    
+
+                        context.updateElems();
+
+                        let jobSize = 50;
+                        let jobs = [];
+                        let results = [];
+    
+                        for (let i = 0; context.missions.length > i; i += jobSize) {
+                            jobs.push(context.missions.slice(i, i+jobSize));
+                        }
+                        console.log("jobs", jobs);
+
+                        let numErrors = 0;
+                        let jobNo = 0;
+                        const next = () => {
+                            let job = jobs[jobNo];
+                            if (!stopCheck && job != null) {
+
+                                console.log("job", job);
+
+                                waitDlg.setStatus(`Please wait, checking mission statuses (${jobNo*jobSize}/${context.missions.length})`);
+                                waitDlg.setExtra("");
+                                waitDlg.setProgress(jobNo+1, jobs.length);
+
+                                PLUGIN.provider.checkMissions(job, (err, statuses) => {
+                                    if (err) {
+                                        ++numErrors;
+                                        waitDlg.setExtra("ERROR! There was an error checking mission statuses:\n\n" + err.message);
+                                        console.error("ERROR: Failed to check missions statuses:", err);
+                                        setTimeout(() => next(), 1000); // retry current        
+                                    } else {
+                                        results = results.concat(statuses);
+                                        waitDlg.setExtra("");
+                                        jobNo++;
+                                        next(); //setTimeout(() => next(), 1000);
+                                    }
+                                });
+
                             } else {
+
+                                waitDlg.close();
+
+                                if (numErrors > 0) {
+                                    alert("Warning: there were errors while checking mission statuses - you might want to check the javascript console for errors, and report this to the support group on Telegram!");
+                                }
+
                                 //console.log("CHECKED", statuses);
-                                statuses.forEach(status => {
+                                results.forEach(status => {
                                     let mission = context.missions.find(c => c.guid == status.guid);
                                     if (mission) {
                                         mission.$known = status;
@@ -1976,16 +2020,24 @@ function wrapper(plugin_info) {
                                         console.error("ERROR: Server returned status for mission we did not ask for?", status);
                                     }
                                 })
-                            }
-                            context.missions.forEach(mission => {
-                                mission.$pending = false;
-                            })
-                            context.updateElems();
+                                
+                                // clear pending status
+                                context.missions.forEach(mission => {
+                                    mission.$pending = false;
+                                })
 
-                            // call handler after
-                            handler(context, args, true);
-                        });
-                    }, 0);
+                                // update all elements
+                                context.updateElems();
+    
+                                // call handler after
+                                handler(context, args, true);
+
+                            }
+                        }
+                        next();
+
+                    });
+
                 }
 
             } finally {
