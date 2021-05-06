@@ -1979,6 +1979,7 @@ function wrapper(plugin_info) {
 
                         let numErrors = 0;
                         let jobNo = 0;
+                        let attemptNo = 0;
                         const next = () => {
                             let job = jobs[jobNo];
                             if (!stopCheck && job != null) {
@@ -1994,11 +1995,17 @@ function wrapper(plugin_info) {
                                         ++numErrors;
                                         waitDlg.setExtra("ERROR! There was an error checking mission statuses:\n\n" + err.message);
                                         console.error("ERROR: Failed to check missions statuses:", err);
+                                        ++attemptNo;
+                                        if (attemptNo > 5) {
+                                            attemptNo = 0;
+                                            jobNo++; // skip it
+                                        }
                                         setTimeout(() => next(), 1000); // retry current        
                                     } else {
                                         results = results.concat(statuses);
                                         waitDlg.setExtra("");
                                         jobNo++;
+                                        attemptNo = 0; // reset
                                         next(); //setTimeout(() => next(), 1000);
                                     }
                                 });
