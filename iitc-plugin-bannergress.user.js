@@ -1230,11 +1230,8 @@ function wrapper(plugin_info) {
             this.config = {
                 keycloak: {
                     "realm": "bannergress-test",
-                    "auth-server-url": "https://login.bannergress.com/auth/",
-                    "ssl-required": "external",
-                    "resource": "bannergress-iitc-plugin",
-                    "public-client": true,
-                    "confidential-port": 0
+                    "url": "https://login.bannergress.com/auth/",
+                    "clientId": "bannergress-iitc-plugin"
                 },
                 baseUrl: "https://test.api.bannergress.com/"
             };
@@ -1266,11 +1263,10 @@ function wrapper(plugin_info) {
             const plugin = this.plugin;
 
             this.isAuthenticated = false;
-            let keycloakConfigUrl = "data:application/json;base64," + btoa(JSON.stringify(this.config.keycloak));
 
             if (this.keycloak == null) {
                 console.log("[bannergress] creating interface..")
-                this.keycloak = new Keycloak(keycloakConfigUrl);
+                this.keycloak = new Keycloak(this.config.keycloak);
             }
 
             console.log("[bannergress] initializing..");
