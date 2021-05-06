@@ -1296,7 +1296,7 @@ function wrapper(plugin_info) {
 
         login(callback) {
             if (!this.isAuthenticated) {
-                this.keycloak.login( scope: 'offline_access' })
+                this.keycloak.login({ scope: 'offline_access' })
                 .then(() => callback(null))
                 .catch(err => callback(err));
             }
