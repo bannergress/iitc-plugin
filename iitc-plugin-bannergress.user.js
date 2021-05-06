@@ -1273,7 +1273,8 @@ function wrapper(plugin_info) {
             try {
                 this.keycloak.init({
                     token: this.settings.token,
-                    refreshToken: this.settings.refreshToken
+                    refreshToken: this.settings.refreshToken,
+                    enableLogging: true
                 }).then((authenticated) => {
                     this.settings.subject = this.keycloak.subject;
                     this.settings.refreshToken = this.keycloak.refreshToken;
