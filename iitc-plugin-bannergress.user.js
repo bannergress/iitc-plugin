@@ -1274,7 +1274,8 @@ function wrapper(plugin_info) {
                 this.keycloak.init({
                     token: this.settings.token,
                     refreshToken: this.settings.refreshToken,
-                    enableLogging: true
+                    enableLogging: true,
+                    checkLoginIframe: false
                 }).then((authenticated) => {
                     this.settings.subject = this.keycloak.subject;
                     this.settings.refreshToken = this.keycloak.refreshToken;
@@ -1295,7 +1296,7 @@ function wrapper(plugin_info) {
 
         login(callback) {
             if (!this.isAuthenticated) {
-                this.keycloak.login() //({ scope: 'import-data' })
+                this.keycloak.login( scope: 'offline_access' })
                 .then(() => callback(null))
                 .catch(err => callback(err));
             }
