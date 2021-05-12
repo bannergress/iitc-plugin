@@ -1,10 +1,10 @@
 // ==UserScript==
-// @id             bannerIndexer-missions-addon
-// @name           IITC Plugin: Banner indexer add-on for missions
+// @id             bannergress-plugin
+// @name           IITC Plugin: Bannergress
 // @category       Misc
 // @version        0.4.16
-// @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
-// @description    Banner indexer add-on for missions plugin
+// @namespace      https://github.com/bannergress/iitc-plugin
+// @description    Bannergress integration for IITC
 // @match          https://intel.ingress.com/*
 // @grant          none
 // ==/UserScript==
@@ -18,7 +18,7 @@ function wrapper(plugin_info) {
     // PLUGIN START ////////////////////////////////////////////////////////
 
     if (window.plugin.bannerIndexer) {
-        alert("BANNER INDEXER PLUGIN ALREADY INSTALLED - DO YOU HAVE 2 COPIES OF IT ??");
+        alert("BANNERGRESS PLUGIN ALREADY INSTALLED - DO YOU HAVE 2 COPIES OF IT ??");
         return;
     }
 
@@ -65,7 +65,7 @@ function wrapper(plugin_info) {
     PLUGIN.missionsListHtml = `
         <div>
             <details style="width: 100%;  box-shadow: 0px 0px 10px rgba(0,0,0,0.75); box-sizing: border-box; padding: 0.5em; margin-bottom: 1em" class="bannerIndexer-filters" open>
-                <summary>Banner indexer utilities</summary>
+                <summary>Bannergress utilities</summary>
                 <div style="width: 100%; padding: 0.5em; box-sizing: border-box;">
                     <div class="bannerIndexer-filters-options">
                         Filters<br/>
@@ -329,7 +329,7 @@ function wrapper(plugin_info) {
         show(callback) {
             let focused = false;
             this.dialog = dialog({
-                title: 'Banner indexer - batch processing',
+                title: 'Bannergress plugin - batch processing',
                 html:   `<div class="bannerIndexer-batch" style="padding: 1em">            
                             <div class="bannerIndexer-batch-status"></div>
                             <div>
@@ -564,7 +564,7 @@ function wrapper(plugin_info) {
             // inject settings button
             let buttons = getDialogButtons(dlg);
             buttons.unshift({
-                text: 'Banner indexer opt',
+                text: 'Bannergress settings',
                 click: () => {
                     dlg.dialog('close');
                     let d = new SettingsDialog(this.plugin);
@@ -868,7 +868,7 @@ function wrapper(plugin_info) {
     
                 id: "bannerIndexer-settings-dialog",
     
-                title: "Banner indexer settings",
+                title: "Bannergress settings",
     
                 html: `<div class="bannerIndexer-settings-dialog">
                     <fieldset>
@@ -1013,7 +1013,7 @@ function wrapper(plugin_info) {
         show(text) {
             this.dlg = dialog({
                 html: text,
-                title: 'Banner indexer',
+                title: 'Bannergress plugin',
                 modal: true,
                 id: "bannerIndexer-pleasewait-dialog",
                 buttons: [
@@ -1847,7 +1847,7 @@ function wrapper(plugin_info) {
 
         $("#toolbox").append(
             $("<a>", {
-                text: "Banner indexer opt",
+                text: "Bannergress settings",
                 click: () => {
                     let d = new SettingsDialog(this);
                     d.show();
@@ -1857,7 +1857,7 @@ function wrapper(plugin_info) {
 
         // find the missions plugin
         if (!MISSIONS_PLUGIN) {
-            console.error("⚠⚠⚠ MISSIONS PLUG-IN NOT FOUND - BANNER INDEXER PLUGIN DISABLED ⚠⚠⚠");
+            console.error("⚠⚠⚠ MISSIONS PLUG-IN NOT FOUND - BANNERGRESS PLUGIN DISABLED ⚠⚠⚠");
             return;
         }
 
