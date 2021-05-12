@@ -1487,8 +1487,8 @@ function wrapper(plugin_info) {
         specops: new SpecOpsQuestIntegration(PLUGIN)
     };
 
-    if (!localStorage.getItem("BANNERGRESS_DEV")) {
-        delete PLUGIN.integrations.bannergress;
+    if (!localStorage.getItem("SPECOPS_DEV")) {
+        delete PLUGIN.integrations.specops;
     }
 
     if (localStorage.getItem("SPECOPS_DEV")) {
