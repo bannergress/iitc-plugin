@@ -1857,7 +1857,18 @@ function wrapper(plugin_info) {
 
         // find the missions plugin
         if (!MISSIONS_PLUGIN) {
-            console.error("⚠⚠⚠ MISSIONS PLUG-IN NOT FOUND - BANNERGRESS PLUGIN DISABLED ⚠⚠⚠");
+            dialog({
+                title: 'Mission plugin not found',
+                id: 'iitc-artifacts',
+                html: 'Mission plugin not found....',
+                width: 400,
+                position: {
+                    my: 'right center',
+                    at: 'center-60 center',
+                    of: window,
+                    collision: 'fit'
+                }
+            });
             return;
         }
 
