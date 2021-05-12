@@ -1693,7 +1693,7 @@ function wrapper(plugin_info) {
             batchMinimumDelay: 500,
             batchRandomizeExtraDelay: 1000,
             batchMaxHard: 1000,
-            batchMaxUser: 50,
+            batchMaxUser: 300,
             mapControlEnabled: true,
             refreshLockTime: 7 * 24 * 60 * 60 * 1000
         }, getKey("plugin.bannerIndexer.settings") || {});
