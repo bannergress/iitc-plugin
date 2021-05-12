@@ -886,7 +886,7 @@ function wrapper(plugin_info) {
                                 <td>Enable map controls</td>
                                 <td><input type="checkbox" class="bannerIndexer-settings-dialog-mapControlEnabled" /></td>
                             </tr>
-                            <tr>
+                            <tr class="bannerIndexer-settings-dialog-provider-row" style="display: none">
                                 <td>Integration</td>
                                 <td>
                                     <select style="width: 100%" class="bannerIndexer-settings-dialog-provider"></select>
