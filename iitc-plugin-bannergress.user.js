@@ -1860,7 +1860,7 @@ function wrapper(plugin_info) {
             dialog({
                 title: 'Mission plugin not found',
                 id: 'iitc-artifacts',
-                html: 'It looks like the mission IITC plugin is not activated. Please activate the plugin in the plugin list under <b>Info → Missions</b>.',
+                html: 'It looks like the IITC mission plugin is not activated. Please activate the plugin in the plugin list under <b>Info → Missions</b>.',
                 width: 400,
                 position: {
                     my: 'center center',
