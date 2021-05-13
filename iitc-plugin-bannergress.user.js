@@ -1668,7 +1668,7 @@ function wrapper(plugin_info) {
                     if (callback) callback(err);
                 }
             );
-        }, 1000);
+        }, 0);
     }.bind(PLUGIN);
 
     PLUGIN.loadSettings = function() {
