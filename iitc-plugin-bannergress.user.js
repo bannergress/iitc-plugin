@@ -1689,7 +1689,7 @@ function wrapper(plugin_info) {
 
         this.settings = Object.assign({
             provider: 'disabled',
-            moveAutoRefresh: true,
+            moveAutoRefresh: false,
             batchMinimumDelay: 500,
             batchRandomizeExtraDelay: 1000,
             batchMaxHard: 1000,
