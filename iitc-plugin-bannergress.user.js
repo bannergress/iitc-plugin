@@ -4,6 +4,8 @@
 // @category       Misc
 // @version        0.4.16
 // @namespace      https://github.com/bannergress/iitc-plugin
+// @updateURL      https://bannergress.com/iitc-plugin-bannergress.user.js
+// @downloadURL    https://bannergress.com/iitc-plugin-bannergress.user.js
 // @description    Bannergress integration for IITC
 // @match          https://intel.ingress.com/*
 // @grant          none
@@ -1229,11 +1231,11 @@ function wrapper(plugin_info) {
     
             this.config = {
                 keycloak: {
-                    "realm": "bannergress-test",
+                    "realm": "bannergress",
                     "url": "https://login.bannergress.com/auth/",
                     "clientId": "bannergress-iitc-plugin"
                 },
-                baseUrl: "https://test.api.bannergress.com/"
+                baseUrl: "https://api.bannergress.com/"
             };
     
             this.settings = {
