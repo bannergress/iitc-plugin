@@ -1250,7 +1250,22 @@ function wrapper(plugin_info) {
             $.getScript("https://login.bannergress.com/auth/js/keycloak.js")
             .then(() => {
                 console.log("[bannergress] keycloak script loaded");
-                this.checkAuth(callback);
+                this.checkAuth((err, res) => {
+                    if (res !== true) {
+                        if (confirm("To be able to use the Bannergress plugin you will need to log in to Bannergress first - do you want to do so now?")) {
+                            this.login((err, res) => {
+                                if (err) {
+                                    console.log("[bannergress] Error logging in:", err);
+                                    callback(new Error("Could not authenticate against Bannergress - please try reloading the page and try logging in again!"));
+                                } else {
+                                    callback(null, true);
+                                }
+                            })
+                        } else {
+                            callback(new Error("You cannot use the Bannergress plugin without logging in"));
+                        }
+                    } else callback(err, res);
+                });
             })
             .catch((err) => {
                 console.error("[bannegress] error loading keycloak script", err);
@@ -2188,13 +2203,21 @@ function wrapper(plugin_info) {
 
         console.log("[bannergress] setup")
 
+        this.initialized = false;
         this.setupCSS();
         this.loadSettings();
         this.registerMissionsControl();
 
         console.log("[bannergress] initializing..");
         this.provider.initialize(err => {
-            console.log("[bannergress] initialized!");
+            if (err) {
+                console.error("[bannergress] Error while initializing:", err);
+                alert("Error initializing Bannergress plugin:\n\n" + err.message);          
+            } else {
+                console.log("[bannergress] initialized!");
+                this.initialized = true;
+            }
+
             // There are some plugins that patch various methods we
             // patch - in somewhat weird ways - so let them do their work
             // first, if installed
