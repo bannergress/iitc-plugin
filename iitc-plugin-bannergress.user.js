@@ -1874,6 +1874,8 @@ function wrapper(plugin_info) {
             })
         );
 
+        if (!this.initialized) return;
+
         // find the missions plugin
         if (!MISSIONS_PLUGIN) {
             dialog({
