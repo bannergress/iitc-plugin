@@ -1425,6 +1425,10 @@ function wrapper(plugin_info) {
                     el.append($("<button>", {
                         text: "Log out",
                         click: () => {
+                            this.settings.subject = null;
+                            this.settings.token = null;
+                            this.settings.refreshToken = null;
+                            plugin.saveSettings();
                             this.keycloak.logout(window.location.href);
                         }
                     }))
