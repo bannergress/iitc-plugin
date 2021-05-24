@@ -2177,17 +2177,6 @@ function wrapper(plugin_info) {
             });
         }
 
-
-//                     // inject ours
-//                     // buttons.unshift({
-//                     //     text: "Banner indexer",
-//                     //     click: function() {
-//                     //         PLUGIN.showSettingsDialog();
-//                     //     }
-//                     // });
-
-//             // let dlg = $(".ui-dialog[aria-describedby='dialog-plugin-mission-view-dialog']");
-
     }.bind(PLUGIN);
 
     PLUGIN.setupMapControls = function() {
