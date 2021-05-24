@@ -236,7 +236,7 @@ function wrapper(plugin_info) {
             }
             window.plugin.missions.storeCache();
         } catch (err) {
-            console.error("Error updating missions plugin cache:", err);
+            console.error("[bannergress] Error updating missions plugin cache:", err);
         }
     }
 
@@ -255,10 +255,10 @@ function wrapper(plugin_info) {
         window.postAjax('getMissionDetails', {
             guid: guid
         }, function(data) {
-            console.log("GOT INTEL DATA", data);
+            console.debug("[bannergress] got intel data:", data);
             try {
                 let mission = decodeMission(data.result);
-                console.log("DECODED INTEL DATA", mission);
+                console.debug("[bannergress] decoded intel data:", mission);
 
                 updateMissionCache(mission);
 
@@ -268,7 +268,7 @@ function wrapper(plugin_info) {
                 errorcallback(err);
             }
         }, function(err) {
-            console.error("ERROR GETTING MISSION INFO FROM INTEL", err);
+            console.error("[bannergress] ERROR GETTING MISSION INFO FROM INTEL", err);
             errorcallback(err);
         });
 
@@ -343,7 +343,7 @@ function wrapper(plugin_info) {
                     {
                         text: "Stop!",
                         click: () => {
-                            console.log("stopping batch processing..");
+                            console.log("[bannergress] stopping batch processing..");
                             this.stopCallback();
                         }
                     }
@@ -445,7 +445,7 @@ function wrapper(plugin_info) {
 
                         } else {
                             alert("ERROR!\n\nAn error occurred while processing mission details:\n\n" + err.message);
-                            console.log("DOWNLOAD ERROR", err);
+                            console.log("[bannergress] ERROR DOWNLOADING MISSION:", err);
                         }
                     });
                 });
@@ -744,7 +744,7 @@ function wrapper(plugin_info) {
 
                             progressDlg.setStatus("");
                             let cur = filteredMissions.shift();
-                            console.log("batch: process next:", cur);
+                            console.log("[bannergress] batch: process next:", cur);
                             if (cur && !this.stopBatch) {
                                 
                                 progressDlg.setStatus(`Processing ${num+1} of ${count}..`);
@@ -755,10 +755,10 @@ function wrapper(plugin_info) {
                                 let batchWaitBase = this.plugin.settings.batchMinimumDelay;
                                 let batchWaitRandom = this.plugin.settings.batchRandomizeExtraDelay;
 
-                                console.log("batch: downloading mission", { cur });
+                                console.log("[bannergress] batch: downloading mission", { cur });
                                 this.plugin.downloadMission(cur, (err, mission) => {
                                     
-                                    console.log("batch: download mission completed:", { cur, err, mission })
+                                    console.log("[bannergress] batch: download mission completed:", { cur, err, mission })
                                     
                                     if (err) {
                                         if (err.isCritical) {
@@ -1115,7 +1115,7 @@ function wrapper(plugin_info) {
                 console.log("[specops] known missions", { knownMissions });
                 callback(null, knownMissions);
             }).catch(function(xhr) {
-                console.error("Error checking mission statuses, XHR=", xhr);
+                console.error("[specops] Error checking mission statuses, XHR=", xhr);
                 let err = new Error(`Error checking mission statuses (XHR: ${xhr.responseText})`)
                 callback(err);
             })
@@ -1284,11 +1284,11 @@ function wrapper(plugin_info) {
                     this.isAuthenticated = authenticated;
                     callback(null, authenticated);
                 }).catch(err => {
-                    console.log("[bannergress/keycloack] error initializing ", err);
+                    console.log("[bannergress] error initializing keycloak", err);
                     callback(err);
                 });
             } catch (err) {
-                console.error("[bannergress/keycloack] keycloak initialization error:", err);
+                console.error("[bannergress] keycloak initialization error:", err);
                 callback(err);
             }
 
@@ -1609,13 +1609,13 @@ function wrapper(plugin_info) {
 
     PLUGIN.downloadMission = function(mission, callback) {
 
-        console.log("downloadMission", mission);
+        console.log("[bannergress] downloadMission", mission);
 
         // update state and redraw ui element to "pending"
         mission.$pending = true;
         mission.$context.updateElem(mission);
 
-        console.log("LOADING MISSION:", mission.guid);
+        console.log("[bannergress] loading mission:", mission.guid);
 
         setTimeout(() => {
             //window.plugin.missions.loadMission(m.mission.guid,
@@ -1625,34 +1625,34 @@ function wrapper(plugin_info) {
 
                     const MISSIONS_PLUGIN = window.plugin.missions;
 
-                    console.log("MISSION LOADED:", details);
+                    console.log("[bannergress] mission loaded:", details);
 
                     // import new data
                     for (let key in details) mission[key] = details[key];
                     try {
                         let oldEl = mission.$elem;
-                        console.debug("re-rendering mission summary element", mission, oldEl);
+                        console.debug("[bannergress] re-rendering mission summary element", mission, oldEl);
                         let newEl = MISSIONS_PLUGIN.renderMissionSummary(mission);
                         oldEl.replaceWith(newEl);
                     } catch (err) {
-                        console.error("error re-rendering mission summary element", mission, err);
+                        console.error("[bannergress] error re-rendering mission summary element", mission, err);
                     }
 
-                    console.log("SUBMITTING TO BACKEND..");
+                    console.log("[bannergress] submitting mission details to backend..", details);
 
                     PLUGIN.provider.submitMission(details, function(err, submittedMission) {
 
                         mission.$pending = false;
                         if (err) {
 
-                            console.error("ERROR SUBMITTING TO BACKEND:", err);
+                            console.error("[bannergress] ERROR SUBMITTING MISSION DETAILS TO BACKEND:", { details, err });
                             err.isCritical = true;
                             mission.$context.updateElem(mission);
                             if (callback) callback(err);
 
                         } else {
 
-                            console.log("SUBMITTED TO BACKEND:", submittedMission);
+                            console.log("[bannergress] successfully submitted mission details to backend:", submittedMission);
                             mission.$known = submittedMission;
                             mission.$context.updateElem(mission);
                             if (callback) callback(null, submittedMission);
@@ -1666,7 +1666,7 @@ function wrapper(plugin_info) {
                 function loadMissionFailed(xhr) {
 
                     let err = new Error("Intel /r/getMissionDetail request failed (" + xhr.statusText + ")");
-                    console.error("ERROR QUERYING MISSION DETAILS FROM INTEL:", err);
+                    console.error("[bannergress] ERROR QUERYING MISSION DETAILS FROM INTEL:", { mission, err });
                     mission.$pending = false;
                     mission.$context.updateElem(mission);
                     if (callback) callback(err);
@@ -1707,7 +1707,7 @@ function wrapper(plugin_info) {
         for (let id in this.integrations) {
             let ps = getKey("plugin.bannerIndexer.settings." + id);
             if (ps != null) {
-                console.log("loading settings for " + id + ":", ps);
+                console.log("[bannergress] loading settings for " + id + ":", ps);
                 this.integrations[id].settings = Object.assign({}, this.integrations[id].settings, ps);
             }
         }
@@ -1844,7 +1844,7 @@ function wrapper(plugin_info) {
 
     PLUGIN.install = function() {
 
-        console.log("INSTALLING...");
+        console.log("[bannergress] installing..");
 
         const PLUGIN = window.plugin.bannerIndexer;
         const MISSIONS_PLUGIN = window.plugin.missions;
@@ -1905,7 +1905,7 @@ function wrapper(plugin_info) {
 
             let mission = args[0];
             if (mission.$context == null) {
-                console.error("ENCOUNTERED MISSION WITHOUT CONTEXT -- WHERE DOES THIS BELONG?");
+                console.warn("[bannergress] ENCOUNTERED MISSION WITHOUT CONTEXT -- WHERE DOES THIS BELONG?");
             }
 
             // call original
@@ -1988,7 +1988,7 @@ function wrapper(plugin_info) {
                         for (let i = 0; context.missions.length > i; i += jobSize) {
                             jobs.push(context.missions.slice(i, i+jobSize));
                         }
-                        console.log("jobs", jobs);
+                        console.debug("[bannergress] check-status-jobs:", jobs);
 
                         let numErrors = 0;
                         let jobNo = 0;
@@ -1997,7 +1997,7 @@ function wrapper(plugin_info) {
                             let job = jobs[jobNo];
                             if (!stopCheck && job != null) {
 
-                                console.log("job", job);
+                                //console.log("job", job);
 
                                 waitDlg.setStatus(`Please wait, checking mission statuses (${jobNo*jobSize}/${context.missions.length})`);
                                 waitDlg.setExtra("");
@@ -2007,7 +2007,7 @@ function wrapper(plugin_info) {
                                     if (err) {
                                         ++numErrors;
                                         waitDlg.setExtra("ERROR! There was an error checking mission statuses:\n\n" + err.message);
-                                        console.error("ERROR: Failed to check missions statuses:", err);
+                                        console.error("[bannergress] ERROR: Failed to check missions statuses:", err);
                                         ++attemptNo;
                                         if (attemptNo > 5) {
                                             attemptNo = 0;
@@ -2037,7 +2037,7 @@ function wrapper(plugin_info) {
                                     if (mission) {
                                         mission.$known = status;
                                     } else {
-                                        console.error("ERROR: Server returned status for mission we did not ask for?", status);
+                                        console.error("[bannergress] ERROR: Server returned status for mission we did not ask for?", status);
                                     }
                                 })
                                 
@@ -2079,7 +2079,7 @@ function wrapper(plugin_info) {
                 context: 'openTopMissions',
                 bounds: map.getBounds()
             }
-            console.debug("openTopMissions", PLUGIN.constraints);
+            console.debug("[bannergress] openTopMissions", PLUGIN.constraints);
             return PLUGIN._openTopMissions.call(MISSIONS_PLUGIN);
         }
 
@@ -2090,7 +2090,7 @@ function wrapper(plugin_info) {
                 context: 'openPortalMissions',
                 portalGuid: window.selectedPortal
             }
-            console.debug("openPortalMissions", PLUGIN.constraints);
+            console.debug("[bannergress] openPortalMissions", PLUGIN.constraints);
             return PLUGIN._openPortalMissions.call(MISSIONS_PLUGIN);
         }
 
@@ -2101,7 +2101,7 @@ function wrapper(plugin_info) {
                 context: 'openMission',
                 missionGuid: guid
             }
-            console.debug("openMission", PLUGIN.constraints);
+            console.debug("[bannergress] openMission", PLUGIN.constraints);
             return PLUGIN._openMission.call(MISSIONS_PLUGIN, guid);
         }
         
@@ -2109,19 +2109,19 @@ function wrapper(plugin_info) {
         PLUGIN._showMissionListDialog = MISSIONS_PLUGIN.showMissionListDialog;    
         MISSIONS_PLUGIN.showMissionListDialog = function() {
             // WARNING! {this} and scope may be lost here - do not assume anything!
-            console.debug("showMissionListDialog", arguments);
+            console.debug("[bannergress] showMissionListDialog", arguments);
             const PLUGIN = window.plugin.bannerIndexer;
             return PLUGIN.createContext(arguments, PLUGIN._showMissionListDialog, 'showMissionListDialog', 'list',
             (context, args, isAfter) => {
                 if (!isAfter) {
                     //console.log("CALLBACK BEFORE", context);
-                    console.log("_____constraints", PLUGIN.constraints);
+                    //console.log("_____constraints", PLUGIN.constraints);
                     context.origin = PLUGIN.constraints;
                     PLUGIN.constraints = null;
                     args[0] = context.missions;
                 } else {
                     //console.log("CALLBACK AFTER", context);
-                    console.log("_____constraints", PLUGIN.constraints);
+                    //console.log("_____constraints", PLUGIN.constraints);
                     let opts = {};
                     if (!isSmartphone()) {
                         opts.height = Math.round(window.innerHeight * 0.9);
@@ -2137,18 +2137,18 @@ function wrapper(plugin_info) {
         PLUGIN._showMissionDialog = MISSIONS_PLUGIN.showMissionDialog;
         MISSIONS_PLUGIN.showMissionDialog = function() {
             // WARNING! {this} and scope may be lost here - do not assume anything!
-            console.debug("showMissionDialog", arguments);
+            console.debug("[bannergress] showMissionDialog", arguments);
             const PLUGIN = window.plugin.bannerIndexer;
             return PLUGIN.createContext(arguments, PLUGIN._showMissionDialog, 'showMissionDialog', 'single',
             (context, args, isAfter) => {
                 if (!isAfter) {
                     //console.log("CALLBACK BEFORE", context);
-                    console.log("_____constraints", PLUGIN.constraints);
+                    //console.log("_____constraints", PLUGIN.constraints);
                     context.origin = PLUGIN.constraints;
                     PLUGIN.constraints = null;
                     args[0] = context.missions[0];
                 } else {
-                    console.log("_____constraints", PLUGIN.constraints);
+                    //console.log("_____constraints", PLUGIN.constraints);
                     //console.log("CALLBACK AFTER", context);
                 }
             });
@@ -2186,15 +2186,15 @@ function wrapper(plugin_info) {
 
     PLUGIN.setup = function () {
 
-        console.log("[bannerindexer] setup")
+        console.log("[bannergress] setup")
 
         this.setupCSS();
         this.loadSettings();
         this.registerMissionsControl();
 
-        console.log("INITIALIZING..");
+        console.log("[bannergress] initializing..");
         this.provider.initialize(err => {
-            console.log("INITIALIZED!");
+            console.log("[bannergress] initialized!");
             // There are some plugins that patch various methods we
             // patch - in somewhat weird ways - so let them do their work
             // first, if installed
@@ -2205,7 +2205,7 @@ function wrapper(plugin_info) {
 
     }.bind(PLUGIN);
     
-    console.log("[bannerindexer] script loaded");
+    console.log("[bannergress] script loaded");
 
     let setup = function () {
         setTimeout(() => PLUGIN.setup(), 100);
