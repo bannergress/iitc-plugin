@@ -1227,6 +1227,8 @@ function wrapper(plugin_info) {
 
             this.name = "Bannergress";
     
+            this.requireLogin = true;
+
             this.config = {
                 keycloak: {
                     "realm": "bannergress-test",
@@ -1251,20 +1253,22 @@ function wrapper(plugin_info) {
             .then(() => {
                 console.log("[bannergress] keycloak script loaded");
                 this.checkAuth((err, res) => {
-                    if (res !== true) {
-                        if (confirm("To be able to use the Bannergress plugin you will need to log in to Bannergress first - do you want to do so now?")) {
-                            this.login((err, res) => {
-                                if (err) {
-                                    console.log("[bannergress] Error logging in:", err);
-                                    callback(new Error("Could not authenticate against Bannergress - please try reloading the page and try logging in again!"));
-                                } else {
-                                    callback(null, true);
-                                }
-                            })
-                        } else {
-                            callback(new Error("You cannot use the Bannergress plugin without logging in"));
-                        }
-                    } else callback(err, res);
+                    callback(err, res);
+                    // if (res !== true) {
+                    //     if (confirm("To be able to use the Bannergress plugin you will need to log in to Bannergress first - do you want to do so now?")) {
+                    //         this.login((err, res) => {
+                    //             if (err) {
+                    //                 console.log("[bannergress] Error logging in:", err);
+                    //                 callback(new Error("Could not authenticate against Bannergress - please try reloading the page and try logging in again!"));
+                    //             } else {
+                    //                 callback(null, true);
+                    //             }
+                    //         })
+                    //     } else {
+                    //         callback(new Error("You cannot use the Bannergress plugin without logging in"));
+                    //     }
+
+                    // } else callback(err, res);
                 });
             })
             .catch((err) => {
@@ -1451,6 +1455,7 @@ function wrapper(plugin_info) {
 
                 const onLoggedOut = () => {
                     console.log("[bannergress] not authenticated, need login");
+                    el.append('<div style="padding: 0.5em; color: #EE3333; font-size: 1.2em; font-weight: bold">To use the Bannergress plugin you must log in first - please do so now!</div>')
                     el.append(
                         $("<button>", {
                             text: "Log in",
@@ -1875,6 +1880,7 @@ function wrapper(plugin_info) {
         );
 
         if (!this.initialized) return;
+        if (this.provider.requireLogin && !this.provider.isAuthenticated) return;
 
         // find the missions plugin
         if (!MISSIONS_PLUGIN) {
@@ -2223,7 +2229,17 @@ function wrapper(plugin_info) {
             // There are some plugins that patch various methods we
             // patch - in somewhat weird ways - so let them do their work
             // first, if installed
-            setTimeout(() => { this.install() }, 100);
+            setTimeout(() => {
+
+                this.install();
+
+                if (this.provider.requireLogin && !this.provider.isAuthenticated) {
+                    let d = new SettingsDialog(this);
+                    d.showRequireLogin = true;
+                    d.show();
+                }
+    
+            }, 100);
         });
 
         this.setupMapControls();
