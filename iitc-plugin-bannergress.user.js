@@ -840,8 +840,8 @@ function wrapper(plugin_info) {
                         settings.refreshLockTime = parseInt(refreshLockTimeInput.val());
 
                         // general
-                        settings.mapControlEnabled = mapControlEnabledCbx.val() == "on";
-                        settings.moveAutoRefresh = moveAutoRefreshCbx.val() == "on";
+                        settings.mapControlEnabled = mapControlEnabledCbx.is(":checked");
+                        settings.moveAutoRefresh = moveAutoRefreshCbx.is(":checked");
                         settings.batchMaxUser = Math.min(settings.batchMaxHard, parseInt(batchMaxUserInput.val()));
                         settings.provider = providerSelect.val();
 
