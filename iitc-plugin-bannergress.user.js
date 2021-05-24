@@ -2,7 +2,7 @@
 // @id             bannergress-plugin
 // @name           IITC Plugin: Bannergress
 // @category       Misc
-// @version        0.4.16
+// @version        0.4.17
 // @namespace      https://github.com/bannergress/iitc-plugin
 // @description    Bannergress integration for IITC
 // @match          https://intel.ingress.com/*
