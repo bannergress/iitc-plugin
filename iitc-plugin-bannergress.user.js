@@ -4,6 +4,8 @@
 // @category       Misc
 // @version        0.4.17
 // @namespace      https://github.com/bannergress/iitc-plugin
+// @updateURL      https://bannergress.com/iitc-plugin-bannergress.user.js
+// @downloadURL    https://bannergress.com/iitc-plugin-bannergress.user.js
 // @description    Bannergress integration for IITC
 // @match          https://intel.ingress.com/*
 // @grant          none
@@ -663,10 +665,8 @@ function wrapper(plugin_info) {
                 let numHidden =  this.missions.length - filteredMissions.length;
                 if (filteredMissions.length == 0 && this.missions.length > 0)
                     $("#bannerIndexer-filtered-count").text(`Your current filters exclude all missions! (${numHidden} hidden)`).show();
-                else if (numHidden > 0) {
+                else {
                     $("#bannerIndexer-filtered-count").text(`Showing ${filteredMissions.length} of ${this.missions.length} missions (${numHidden} hidden by filters)`).show();
-                } else {
-                    $("#bannerIndexer-filtered-count").hide();
                 }
 
                 //console.log("applyFilters -> ", filteredMissions);
@@ -1231,11 +1231,14 @@ function wrapper(plugin_info) {
 
             this.config = {
                 keycloak: {
-                    "realm": "bannergress-test",
+                    "realm": "bannergress",
+                    // "realm": "bannergress-test",
+
                     "url": "https://login.bannergress.com/auth/",
                     "clientId": "bannergress-iitc-plugin"
                 },
-                baseUrl: "https://test.api.bannergress.com/"
+                baseUrl: "https://api.bannergress.com/"
+                // baseUrl: "https://test.api.bannergress.com/"
             };
     
             this.settings = {
