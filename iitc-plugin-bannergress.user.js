@@ -1107,7 +1107,7 @@ function wrapper(plugin_info) {
                 dataType: "json",
                 url: submitUrl,
                 data: JSON.stringify(missionStripped)
-            }).success((res) => {
+            }).done((res) => {
                 console.log("[specops] got response for known missions", res);
                 let knownMissions = res.results.map(this.convertToMissionsPluginFormat);
                 console.log("[specops] known missions", { knownMissions });
@@ -1132,7 +1132,7 @@ function wrapper(plugin_info) {
                 dataType: "json",
                 url: submitUrl,
                 data: JSON.stringify(mission)
-            }).success((res) => {
+            }).done((res) => {
                 console.log("[specops] mission details submitted!", res);
                 let sentMission = res.results.map(this.convertToMissionsPluginFormat)[0];
                 console.log("[specops] sent mission", { sentMission });
@@ -1199,11 +1199,11 @@ function wrapper(plugin_info) {
                 $.get(`${this.config.baseUrl}profile/api-key/test?apiKey=`
                     + encodeURIComponent(apiKeyEl.val())
                     + "&iu=" + encodeURIComponent(this.iu)
-                ).success(() => {
+                ).done(() => {
                     console.log("[specops] api key is ok")
                     alert("API key is OK!")
                 })
-                .faile(xhr => {
+                .fail(xhr => {
                     console.log("[specops] api key test failed", xhr.statusText);
                     alert("Failed to verify API key:\n\n" + xhr.statusText);
                 });
@@ -1354,6 +1354,7 @@ function wrapper(plugin_info) {
             this.preflight(err => {
                 if (err) return callback(err);
                 console.log("[bannergress] checking which missions have been indexed..");
+                console.log("[bannergress] " + `${this.config.baseUrl}missions/status ` + JSON.stringify(missionIds));
                 $.ajax({
                     type: 'POST',
                     contentType: "application/json; charset=utf-8",
@@ -1363,7 +1364,7 @@ function wrapper(plugin_info) {
                     },
                     url: `${this.config.baseUrl}missions/status`,
                     data: JSON.stringify(missionIds)
-                }).success(res => {
+                }).done(res => {
                     console.log("[bannergress] check missions returned:", res);
                     let knownList = this.parseResponse(res);
                     console.debug("[bannergress] parsed response: %o -> %o", res, knownList);
@@ -1394,7 +1395,7 @@ function wrapper(plugin_info) {
                     },
                     url: `${this.config.baseUrl}import/details`,
                     data: JSON.stringify(missionData)
-                }).success(res => {
+                }).done(res => {
                     console.log("[bannergress] import mission returned:", res);
 
                     if (res.latestUpdateDetails) { // actual api deviates from doc
