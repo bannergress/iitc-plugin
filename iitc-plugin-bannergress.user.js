@@ -2198,6 +2198,58 @@ function wrapper(plugin_info) {
 
         console.log("[bannergress] setup")
 
+        // CHECK FOR USAGE OF IITC.me
+        // show a warning the first time IITC loads
+        // show a warning with a checkbox (to not show the warning) the next times IITC loads
+        // hide the warning if the user enabled the checkbox
+        // show the warning again if the version of Bannergress has changed
+        let iitcversion = window.script_info.script.version;
+        let iitcmainversion = iitcversion.replace(/^(\d+\.\d+).*$/,'$1');
+        if (iitcmainversion == '0.26') {
+            let iitcversioncheck = {};
+            function loadiitcversioncheck() {
+                try {
+                    iitcversioncheck = JSON.parse(localStorage['bannergressiitcversioncheck']);
+                    if (iitcversioncheck.bannergressversion != plugin_info.script.version) { // show the warning again if the version of Bannergress has changed
+                        iitcversioncheck.showwarning = true;
+                    }
+                } catch(e) {
+                    iitcversioncheck = {}; // show a warning the first time IITC loads, without a checkbox
+                }
+            }
+            function storeiitcversioncheck() {
+                localStorage['bannergressiitcversioncheck'] = JSON.stringify(iitcversioncheck);
+            }
+            loadiitcversioncheck();
+            if (!('showwarning' in iitcversioncheck) || iitcversioncheck.showwarning) {
+                let container = document.createElement('div');
+                container.innerHTML = '<p><b>Bannergress warning:</b></p>' +
+                    '<p>You are using an older version of <a onclick="window.aboutIITC()" style="cursor: help">IITC</a><br>' +
+                    'version ' + iitcversion + '</p>' +
+                    '<p>The Bannergress plugin may not work as intended with this version of IITC.</p>' +
+                    '<p>You are encouraged to download the lastest release version of IITC-CE instead.</p>' +
+                    '<p>Go to <a href="https://iitc.app/" target="_blank">https://iitc.app/</a> and download from there.</p>';
+                if ('showwarning' in iitcversioncheck && iitcversioncheck.showwarning) {
+                    let label = container.appendChild(document.createElement('label'));
+                    let checkbox = label.appendChild(document.createElement('input'));
+                    checkbox.type = 'checkbox';
+                    checkbox.addEventListener('change',function() {
+                        iitcversioncheck.showwarning = !this.checked;
+                        storeiitcversioncheck();
+                    },false);
+                    label.appendChild(document.createTextNode(' Do not warn me again'));
+                }
+                window.dialog({
+                    html: container,
+                    title: 'Bannergress ' + plugin_info.script.version
+                });
+                // store initial values
+                iitcversioncheck.bannergressversion = plugin_info.script.version;
+                iitcversioncheck.showwarning = true; // show a warning with a disable checkbox the next times IITC loads
+                storeiitcversioncheck();
+            }
+        }
+
         this.initialized = false;
         this.setupCSS();
         this.loadSettings();
