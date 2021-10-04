@@ -29,28 +29,28 @@ function wrapper(plugin_info) {
     PLUGIN.registerMissionsControl = function() {
 
         PLUGIN.MissionsControl = L.Control.extend({
-        
+
             options: {
                 position: 'topleft'
             },
-    
+
             onAdd(map) {
-    
+
                 let el = $(`<div class="toggle-iitc-standard-layers-control leaflet-bar">
                                 <a class="leaflet-bar-part miv-btn" ` + (isSmartphone() ? '' : 'title="Show missions in view"') + `>
-                                    <div>🚩</div>                
+                                    <div>🚩</div>
                                 </a>
                                 <a class="leaflet-bar-part zoom-btn" ` + (isSmartphone() ? '' : 'title="Zoom to all portals visible"') + `>
-                                    <div>🔍</div>                
+                                    <div>🔍</div>
                                 </a>
                             </div>
                 `);
-        
+
                 let mivBtn = el.find(".miv-btn").first();
                 mivBtn.click(ev => {
                     window.plugin.missions.openTopMissions()
                 })
-    
+
                 let zoomBtn = el.find(".zoom-btn").first();
                 zoomBtn.click(ev => {
                     let zoom = map.getZoom();
@@ -59,9 +59,9 @@ function wrapper(plugin_info) {
 
                 return el[0];
             }
-    
+
         });
-    
+
     }
 
     PLUGIN.missionsListHtml = `
@@ -250,7 +250,7 @@ function wrapper(plugin_info) {
         //
         // 2. if the postAjax() call fails, it will not call the errorcallback
         //    handler because there is an unreferenced variable error that is
-        //    thrown (no "error" variable) 
+        //    thrown (no "error" variable)
         //
         // 3. (it caches data for quite long)
 
@@ -302,7 +302,7 @@ function wrapper(plugin_info) {
         }
         return result;
     }
-    
+
     function decodeMission(data) {
         return {
             guid: data[0],
@@ -332,7 +332,7 @@ function wrapper(plugin_info) {
             let focused = false;
             this.dialog = dialog({
                 title: 'Bannergress plugin - batch processing',
-                html:   `<div class="bannerIndexer-batch" style="padding: 1em">            
+                html:   `<div class="bannerIndexer-batch" style="padding: 1em">
                             <div class="bannerIndexer-batch-status"></div>
                             <div>
                                 <progress class="bannerIndexer-batch-progress" style="width: 100%" max="100" value="0"></progress>
@@ -350,7 +350,7 @@ function wrapper(plugin_info) {
                         }
                     }
                 ],
-    
+
                 focusCallback: () => {
                     if (focused) return;
                     focused = true;
@@ -451,8 +451,8 @@ function wrapper(plugin_info) {
                         }
                     });
                 });
-            } 
-            
+            }
+
             if (suppressBroadcast !== true) {
                 this.plugin.broadcastUpdateElem(mission, this);
             }
@@ -481,7 +481,7 @@ function wrapper(plugin_info) {
                 let deltaTime = lockedUntil - now;
                 let time = new Date(m.$known.$detailsUpdated).toLocaleDateString();
                 if (m.$known.$detailsUpdated && deltaTime > 0) {
-    
+
                     //console.log("MODIFIED", m.$known.$detailsUpdated, lockTime, deltaTime, time);
                     let DAYMILLIS = 24 * 60 * 60 * 1000;
                     let HOURMILLIS = 60 * 60 * 1000;
@@ -489,25 +489,25 @@ function wrapper(plugin_info) {
                     let days = Math.floor(deltaTime / DAYMILLIS);
                     let hours = Math.floor((deltaTime % DAYMILLIS) / HOURMILLIS);
                     let mins = Math.ceil((deltaTime % HOURMILLIS) / MINUTEMILLIS);
-                    
+
                     let lockedTime = days+"d " + hours+"h " + mins+"m";
                     return { id: 'indexed', icon: '🔒', text: 'Indexed', locked: true, title: 'Last updated: ' + time + ' - You can update again in ' + lockedTime}
-    
+
                 } else {
-    
+
                     return { id: 'indexed-refresh', icon: '✅', text: 'Indexed', title: 'Last updated: ' + time + ' - click to refresh!' }
-    
+
                 }
             } else if (m.$known) {
-    
+
                 // known, but no details
                 return { id: 'new', icon: '🔃', text: 'Not indexed', title: 'Click to add!' }
-    
+
             } else {
-    
+
                 // not known
                 return { id: 'new', icon: '🔃', text: 'Not indexed', title: 'Click to add!' }
-    
+
             }
         }
 
@@ -538,7 +538,7 @@ function wrapper(plugin_info) {
                 }
 
             }
-            
+
             function zpad(text, minLength) {
                 while (text.length < minLength) text = "0" + text;
                 return text;
@@ -562,7 +562,7 @@ function wrapper(plugin_info) {
             // inject toolbox above <div> that contains missions list
             let elems = $(this.plugin.missionsListHtml);
             elems.insertBefore(div);
-            
+
             // inject settings button
             let buttons = getDialogButtons(dlg);
             buttons.unshift({
@@ -637,7 +637,7 @@ function wrapper(plugin_info) {
                             (includeRefreshable && status.id == 'indexed-refresh') ||
                             (includeLocked && status.id == 'indexed' && forceOnlyDownloadable !== true)
                         ) && (!excludeUnnumbered || /\d+/.test(mission.title));
-                    
+
 
                     //console.log("filter: m: %o s: %o => %s", mission, status, include);
                     return include;
@@ -660,7 +660,7 @@ function wrapper(plugin_info) {
             }
 
             const applyFilters = this.applyFilters = () => {
-            
+
                 let filteredMissions = getFilteredMissions();
                 let numHidden =  this.missions.length - filteredMissions.length;
                 if (filteredMissions.length == 0 && this.missions.length > 0)
@@ -670,7 +670,7 @@ function wrapper(plugin_info) {
                 }
 
                 //console.log("applyFilters -> ", filteredMissions);
-    
+
                 let newDiv = $(MISSIONS_PLUGIN.renderMissionList(filteredMissions));
                 newDiv.css('overflow-y', 'auto');
                 $(div).replaceWith(newDiv);
@@ -684,7 +684,7 @@ function wrapper(plugin_info) {
                 '#bannerIndexer-show-refreshable-filter',
                 '#bannerIndexer-show-indexed-filter',
                 '#bannerIndexer-hide-unnumbered-filter',
-                '#bannerIndexer-sort-filter'    
+                '#bannerIndexer-sort-filter'
             ].forEach(cbx => {
                 $(cbx).click(() => applyFilters());
             })
@@ -710,8 +710,8 @@ function wrapper(plugin_info) {
                 // apply hard limit
                 if (filteredMissions.length > this.plugin.settings.batchMaxHard) {
                     filteredMissions = filteredMissions.slice(0, this.plugin.settings.batchMaxHard);
-                }             
-                
+                }
+
                 if (filteredMissions.length == 0) {
                     alert("There are no missions to process - please adjust your filters or move to an area with some missions!");
                     return;
@@ -746,7 +746,7 @@ function wrapper(plugin_info) {
                             let cur = filteredMissions.shift();
                             console.log("[bannergress] batch: process next:", cur);
                             if (cur && !this.stopBatch) {
-                                
+
                                 progressDlg.setStatus(`Processing ${num+1} of ${count}..`);
                                 progressDlg.setExtra(cur.title);
                                 progressDlg.setProgress(num, count);
@@ -757,9 +757,9 @@ function wrapper(plugin_info) {
 
                                 console.log("[bannergress] batch: downloading mission", { cur });
                                 this.plugin.downloadMission(cur, (err, mission) => {
-                                    
+
                                     console.log("[bannergress] batch: download mission completed:", { cur, err, mission })
-                                    
+
                                     if (err) {
                                         if (err.isCritical) {
                                             alert("ERROR!\n\nAn error occurred while submitting the mission details - please log in again!")
@@ -796,7 +796,7 @@ function wrapper(plugin_info) {
             });
 
         }
-    
+
     }
 
     class SettingsDialog {
@@ -857,19 +857,19 @@ function wrapper(plugin_info) {
                     }
                 }
             ];
-    
+
             if (plugin.provider.beforeShowSettings) {
                 plugin.provider.beforeShowSettings({ buttons: buttons });
             }
-    
+
             let focused = false;
 
             this.dlg = dialog({
-    
+
                 id: "bannerIndexer-settings-dialog",
-    
+
                 title: "Bannergress settings",
-    
+
                 html: `<div class="bannerIndexer-settings-dialog">
                     <fieldset>
                         <legend>General</legend>
@@ -920,11 +920,11 @@ function wrapper(plugin_info) {
                         <div class="bannerIndexer-settings-dialog-provider-area"></div>
                     </fieldset>
                 </div>`,
-    
+
                 width: 400,
 
                 modal: true,
-    
+
                 focusCallback: (el, ui) => {
                     setTimeout(() => {
                         if (focused) return;
@@ -941,7 +941,7 @@ function wrapper(plugin_info) {
                         batchMinimumDelayInput = $(".bannerIndexer-settings-dialog-batchMinimumDelay").first();
                         batchRandomizeExtraDelayInput = $(".bannerIndexer-settings-dialog-batchRandomizeExtraDelay").first();
                         refreshLockTimeInput = $(".bannerIndexer-settings-dialog-refreshLockTime").first();
-                        
+
                         if (settings.mapControlEnabled) mapControlEnabledCbx.attr("checked", "checked");
                         if (settings.moveAutoRefresh) moveAutoRefreshCbx.attr("checked", "checked");
 
@@ -958,7 +958,7 @@ function wrapper(plugin_info) {
                         }
 
                         this.dlg.dialog("option", "position", {my: "center", at: "center", of: window});
-                        
+
                         //console.log("select", select);
                         for (let key in plugin.integrations) {
                             //console.log("== " + key);
@@ -977,24 +977,24 @@ function wrapper(plugin_info) {
                             providerAreaDiv.empty();
                             temp.showSettings(providerAreaDiv, this.dlg);
                         })
-    
+
                         providerAreaDiv.empty();
                         plugin.provider.showSettings(providerAreaDiv, this.dlg);
-    
+
                     }, 0);
 
                 },
-    
+
                 closeCallback: () => {
                     // TODO
                 },
-    
+
                 buttons: buttons
             });
 
             return this.dlg;
         }
-        
+
         close() {
             this.dlg.dialog('close');
         }
@@ -1036,7 +1036,7 @@ function wrapper(plugin_info) {
         close() {
             this.dlg.dialog('close');
         }
-    
+
     }
 
     class SpecOpsQuestIntegration {
@@ -1079,7 +1079,7 @@ function wrapper(plugin_info) {
                 ? missions.map(function(m) { return m.guid })
                 : [ missions.guid ];
 
-                
+
             console.log("[specops] checking which missions have been indexed..", { missions, missionIds });
 
             // let checkUrl = this.config.baseUrl + 'missions/guids?apiKey=' + encodeURIComponent(this.settings.apikey);
@@ -1224,7 +1224,7 @@ function wrapper(plugin_info) {
             this.id =  'bannergress';
 
             this.name = "Bannergress";
-    
+
             this.requireLogin = true;
 
             this.config = {
@@ -1235,7 +1235,7 @@ function wrapper(plugin_info) {
                 },
                 baseUrl: "https://api.bannergress.com/"
             };
-    
+
             this.settings = {
                 subject: null,
                 token: null,
@@ -1248,7 +1248,7 @@ function wrapper(plugin_info) {
         initialize(callback) {
             console.log("[bannergress] loading keycloak script..");
             $.getScript("https://login.bannergress.com/auth/js/keycloak.js")
-            .success(() => {
+            .done(() => {
                 console.log("[bannergress] keycloak script loaded");
                 this.checkAuth((err, res) => {
                     callback(err, res);
@@ -1276,7 +1276,7 @@ function wrapper(plugin_info) {
         }
 
         checkAuth(callback) {
-            
+
             const plugin = this.plugin;
 
             this.isAuthenticated = false;
@@ -1458,7 +1458,7 @@ function wrapper(plugin_info) {
                         $("<button>", {
                             text: "Log in",
                             click: () => {
-                                // this will redirect via an external site, so 
+                                // this will redirect via an external site, so
                                 // we need to set this as the provider and save
                                 // settings
                                 plugin.provider = this;
@@ -1546,12 +1546,12 @@ function wrapper(plugin_info) {
             pointer-events: none;
         }
 
-        details.bannerIndexer-filters summary::before { 
-            content:"⊞ "; 
+        details.bannerIndexer-filters summary::before {
+            content:"⊞ ";
         }
 
-        details.bannerIndexer-filters[open] summary::before { 
-            content:"⊟ "; 
+        details.bannerIndexer-filters[open] summary::before {
+            content:"⊟ ";
         }
 
         .bannerIndexer-mission-row {
@@ -1748,7 +1748,7 @@ function wrapper(plugin_info) {
     }.bind(PLUGIN)
 
     PLUGIN.saveProviderSettings = function(provider) {
-        
+
         if (provider == null) provider = this.provider;
 
         //console.log("saveProviderSettings", provider.settings);
@@ -1764,7 +1764,7 @@ function wrapper(plugin_info) {
     let waitColor = `#FACD00`;
     let newColor = '#FFEB31';  //`#FACD00`;
     let updateColor = `#45DC00`;
-    
+
     PLUGIN.icons = {
 
         'new': {
@@ -1936,7 +1936,7 @@ function wrapper(plugin_info) {
 
             return el;
         }
-        
+
         PLUGIN.createContext = function(argz, real, methodName, type, handler) {
 
             const PLUGIN = window.plugin.bannerIndexer;
@@ -1998,14 +1998,14 @@ function wrapper(plugin_info) {
 
                         waitDlg.setExtra("");
                         waitDlg.setProgress(0, 1);
-                        waitDlg.setStatus("");    
+                        waitDlg.setStatus("");
 
                         context.updateElems();
 
                         let jobSize = 250;
                         let jobs = [];
                         let results = [];
-    
+
                         for (let i = 0; context.missions.length > i; i += jobSize) {
                             jobs.push(context.missions.slice(i, i+jobSize));
                         }
@@ -2034,7 +2034,7 @@ function wrapper(plugin_info) {
                                             attemptNo = 0;
                                             jobNo++; // skip it
                                         }
-                                        setTimeout(() => next(), 1000); // retry current        
+                                        setTimeout(() => next(), 1000); // retry current
                                     } else {
                                         results = results.concat(statuses);
                                         waitDlg.setExtra("");
@@ -2061,7 +2061,7 @@ function wrapper(plugin_info) {
                                         console.error("[bannergress] ERROR: Server returned status for mission we did not ask for?", status);
                                     }
                                 })
-                                
+
                                 // clear pending status
                                 context.missions.forEach(mission => {
                                     mission.$pending = false;
@@ -2069,7 +2069,7 @@ function wrapper(plugin_info) {
 
                                 // update all elements
                                 context.updateElems();
-    
+
                                 // call handler after
                                 handler(context, args, true);
 
@@ -2125,9 +2125,9 @@ function wrapper(plugin_info) {
             console.debug("[bannergress] openMission", PLUGIN.constraints);
             return PLUGIN._openMission.call(MISSIONS_PLUGIN, guid);
         }
-        
+
         // save original window.plugin.missions.showMissionListDialog() and install our hook
-        PLUGIN._showMissionListDialog = MISSIONS_PLUGIN.showMissionListDialog;    
+        PLUGIN._showMissionListDialog = MISSIONS_PLUGIN.showMissionListDialog;
         MISSIONS_PLUGIN.showMissionListDialog = function() {
             // WARNING! {this} and scope may be lost here - do not assume anything!
             console.debug("[bannergress] showMissionListDialog", arguments);
@@ -2178,9 +2178,9 @@ function wrapper(plugin_info) {
     }.bind(PLUGIN);
 
     PLUGIN.setupMapControls = function() {
-        
+
         if (this.settings.mapControlEnabled) {
-            if (!this.mapControl) 
+            if (!this.mapControl)
                 this.mapControl = new PLUGIN.MissionsControl();
                 map.addControl(this.mapControl);
         } else {
@@ -2189,7 +2189,7 @@ function wrapper(plugin_info) {
                 this.mapControl = null;
             }
         }
-        // if (isSmartphone()) {            
+        // if (isSmartphone()) {
         // }
 
     }.bind(PLUGIN);
@@ -2259,7 +2259,7 @@ function wrapper(plugin_info) {
         this.provider.initialize(err => {
             if (err) {
                 console.error("[bannergress] Error while initializing:", err);
-                alert("Error initializing Bannergress plugin:\n\n" + err.message);          
+                alert("Error initializing Bannergress plugin:\n\n" + err.message);
             } else {
                 console.log("[bannergress] initialized!");
                 this.initialized = true;
@@ -2277,14 +2277,14 @@ function wrapper(plugin_info) {
                     d.showRequireLogin = true;
                     d.show();
                 }
-    
+
             }, 100);
         });
 
         this.setupMapControls();
 
     }.bind(PLUGIN);
-    
+
     console.log("[bannergress] script loaded");
 
     let setup = function () {
