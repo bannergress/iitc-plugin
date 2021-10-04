@@ -2,7 +2,7 @@
 // @id             bannergress-plugin
 // @name           IITC Plugin: Bannergress
 // @category       Misc
-// @version        0.4.17
+// @version        0.4.18
 // @namespace      https://github.com/bannergress/iitc-plugin
 // @updateURL      https://bannergress.com/iitc-plugin-bannergress.user.js
 // @downloadURL    https://bannergress.com/iitc-plugin-bannergress.user.js
@@ -1107,14 +1107,12 @@ function wrapper(plugin_info) {
                 dataType: "json",
                 url: submitUrl,
                 data: JSON.stringify(missionStripped)
-            })
-            
-            promise.then((res) => {
+            }).success((res) => {
                 console.log("[specops] got response for known missions", res);
                 let knownMissions = res.results.map(this.convertToMissionsPluginFormat);
                 console.log("[specops] known missions", { knownMissions });
                 callback(null, knownMissions);
-            }).catch(function(xhr) {
+            }).fail(function(xhr) {
                 console.error("[specops] Error checking mission statuses, XHR=", xhr);
                 let err = new Error(`Error checking mission statuses (XHR: ${xhr.responseText})`)
                 callback(err);
@@ -1134,12 +1132,12 @@ function wrapper(plugin_info) {
                 dataType: "json",
                 url: submitUrl,
                 data: JSON.stringify(mission)
-            }).then((res) => {
+            }).success((res) => {
                 console.log("[specops] mission details submitted!", res);
                 let sentMission = res.results.map(this.convertToMissionsPluginFormat)[0];
                 console.log("[specops] sent mission", { sentMission });
                 callback(null, sentMission);
-            }).catch(function(err) {
+            }).fail(function(err) {
                 console.error("[specops] error submitting mission details", err);
                 callback(err);
             })
@@ -1201,11 +1199,11 @@ function wrapper(plugin_info) {
                 $.get(`${this.config.baseUrl}profile/api-key/test?apiKey=`
                     + encodeURIComponent(apiKeyEl.val())
                     + "&iu=" + encodeURIComponent(this.iu)
-                ).then(() => {
+                ).success(() => {
                     console.log("[specops] api key is ok")
                     alert("API key is OK!")
                 })
-                .catch(xhr => {
+                .faile(xhr => {
                     console.log("[specops] api key test failed", xhr.statusText);
                     alert("Failed to verify API key:\n\n" + xhr.statusText);
                 });
@@ -1232,13 +1230,10 @@ function wrapper(plugin_info) {
             this.config = {
                 keycloak: {
                     "realm": "bannergress",
-                    // "realm": "bannergress-test",
-
                     "url": "https://login.bannergress.com/auth/",
                     "clientId": "bannergress-iitc-plugin"
                 },
                 baseUrl: "https://api.bannergress.com/"
-                // baseUrl: "https://test.api.bannergress.com/"
             };
     
             this.settings = {
@@ -1253,7 +1248,7 @@ function wrapper(plugin_info) {
         initialize(callback) {
             console.log("[bannergress] loading keycloak script..");
             $.getScript("https://login.bannergress.com/auth/js/keycloak.js")
-            .then(() => {
+            .success(() => {
                 console.log("[bannergress] keycloak script loaded");
                 this.checkAuth((err, res) => {
                     callback(err, res);
@@ -1274,7 +1269,7 @@ function wrapper(plugin_info) {
                     // } else callback(err, res);
                 });
             })
-            .catch((err) => {
+            .fail((err) => {
                 console.error("[bannegress] error loading keycloak script", err);
                 callback(err);
             })
@@ -1368,13 +1363,13 @@ function wrapper(plugin_info) {
                     },
                     url: `${this.config.baseUrl}missions/status`,
                     data: JSON.stringify(missionIds)
-                }).then(res => {
+                }).success(res => {
                     console.log("[bannergress] check missions returned:", res);
                     let knownList = this.parseResponse(res);
                     console.debug("[bannergress] parsed response: %o -> %o", res, knownList);
                     callback(null, knownList);
 
-                }).catch(xhr => {
+                }).fail(xhr => {
                     console.error("[bannergress] Error checking mission statuses, XHR=", xhr);
                     let err = new Error(`Error checking mission statuses (XHR: ${xhr.responseText})`)
                     callback(err);
@@ -1399,7 +1394,7 @@ function wrapper(plugin_info) {
                     },
                     url: `${this.config.baseUrl}import/details`,
                     data: JSON.stringify(missionData)
-                }).then(res => {
+                }).success(res => {
                     console.log("[bannergress] import mission returned:", res);
 
                     if (res.latestUpdateDetails) { // actual api deviates from doc
@@ -1408,7 +1403,7 @@ function wrapper(plugin_info) {
 
                     let knownList = this.parseResponse(res);
                     callback(null, knownList.find(x => x.guid == mission.guid));
-                }).catch(xhr => {
+                }).fail(xhr => {
                     console.error("[bannergress] import mission failed:", xhr);
                     let err = new Error("Failed to submit mission details to server (XHR: " + xhr.statusText + ")");
                     callback(err);
