@@ -1246,6 +1246,10 @@ function wrapper(plugin_info) {
         }
 
         initialize(callback) {
+            if ("android" in window && "addInternalHostname" in android) {
+                let hostname = new URL(this.config.keycloak.url).host;
+                android.addInternalHostname(hostname);
+            }
             console.log("[bannergress] loading keycloak script..");
             $.getScript("https://login.bannergress.com/auth/js/keycloak.js")
             .done(() => {
