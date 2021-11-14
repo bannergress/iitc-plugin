@@ -2,7 +2,7 @@
 // @id             bannergress-plugin
 // @name           IITC Plugin: Bannergress
 // @category       Misc
-// @version        0.4.19
+// @version        0.5.0
 // @namespace      https://github.com/bannergress/iitc-plugin
 // @updateURL      https://bannergress.com/iitc-plugin-bannergress.user.js
 // @downloadURL    https://bannergress.com/iitc-plugin-bannergress.user.js
@@ -1039,183 +1039,6 @@ function wrapper(plugin_info) {
 
     }
 
-    class SpecOpsQuestIntegration {
-
-        constructor(plugin) {
-            this.plugin = plugin;
-
-            this.id = 'specops';
-            this.name = "SpecOps.Quest";
-
-            this.config = {
-                baseUrl: "https://specops.quest/api/"
-            }
-
-            this.settings = {
-                apikey: ''
-            }
-
-            this.isAuthenticated = false;
-        }
-
-        initialize(callback) {
-            console.log("[specops] initialize")
-            callback();
-        }
-
-        checkAuth(callback) {
-            console.log("[specops] checkAuth")
-        }
-
-        login(callback) {
-            console.log("[specops] login")
-        }
-
-        checkMissions(missions, callback) {
-
-            console.log("[specops] checkMissions", missions);
-
-            let missionIds = missions instanceof Array
-                ? missions.map(function(m) { return m.guid })
-                : [ missions.guid ];
-
-
-            console.log("[specops] checking which missions have been indexed..", { missions, missionIds });
-
-            // let checkUrl = this.config.baseUrl + 'missions/guids?apiKey=' + encodeURIComponent(this.settings.apikey);
-            // console.debug(checkUrl);
-            // let promise = $.ajax({
-            //     type: 'POST',
-            //     contentType: "application/json; charset=utf-8",
-            //     dataType: "json",
-            //     url: checkUrl,
-            // data: JSON.stringify(missionIds)
-            // });
-
-            // remove the $context etc vars which can't be serialized
-            let missionStripped = missions.map(m => {
-                let mm = {};
-                for (let key in m) {
-                    if (!/^\$/.test(key)) mm[key] = m[key];
-                }
-                return mm;
-            })
-            let submitUrl = this.config.baseUrl + 'missions?format=missionsplugin&apiKey=' + encodeURIComponent(this.settings.apikey);
-            let promise = $.ajax({
-                type: 'POST',
-                contentType: "application/json; charset=utf-8",
-                dataType: "json",
-                url: submitUrl,
-                data: JSON.stringify(missionStripped)
-            }).done((res) => {
-                console.log("[specops] got response for known missions", res);
-                let knownMissions = res.results.map(this.convertToMissionsPluginFormat);
-                console.log("[specops] known missions", { knownMissions });
-                callback(null, knownMissions);
-            }).fail(function(xhr) {
-                console.error("[specops] Error checking mission statuses, XHR=", xhr);
-                let err = new Error(`Error checking mission statuses (XHR: ${xhr.responseText})`)
-                callback(err);
-            })
-
-        }
-
-        submitMission(mission, callback) {
-
-            console.log("[specops] submitMission", mission);
-
-            console.log("[specops] submitting mission details..");
-            let submitUrl = this.config.baseUrl + 'missions?format=missionsplugin&apiKey=' + encodeURIComponent(this.settings.apikey)
-            let promise = $.ajax({
-                type: 'POST',
-                contentType: "application/json; charset=utf-8",
-                dataType: "json",
-                url: submitUrl,
-                data: JSON.stringify(mission)
-            }).done((res) => {
-                console.log("[specops] mission details submitted!", res);
-                let sentMission = res.results.map(this.convertToMissionsPluginFormat)[0];
-                console.log("[specops] sent mission", { sentMission });
-                callback(null, sentMission);
-            }).fail(function(err) {
-                console.error("[specops] error submitting mission details", err);
-                callback(err);
-            })
-
-        }
-
-        convertToMissionsPluginFormat(info) {
-
-            let mp = {
-                authorNickname: info.author && info.author.nickname,
-                authorTeam: info.author && info.author.team,
-                description: info.description,
-                title: info.title,
-                guid: info.guid,
-                medianCompletionTimeMs: info.time,
-                numUniqueCompletedPlayers: info.numCompleted,
-                ratingE6: info.rating * 1E6,
-                type: info.type,
-                typeNum: [null, 'Sequential', 'Non Sequential', 'Hidden'][info.type],
-                $detailsUpdated: info.detailsModified
-            }
-
-            if (info.waypoints) {
-                mp.waypoints = info.waypoints.map(w => {
-                        let wp = {
-                        guid: '',
-                        hidden: false,
-                        objective: [null, 'Hack this Portal', 'Capture or Upgrade Portal', 'Create Link from Portal', 'Create Field from Portal', 'Install a Mod on this Portal', 'Take a Photo', 'View this Field Trip Waypoint', 'Enter the Passphrase'][w.objective],
-                        objectiveNum: w.objective,
-                        portal: {
-                            latE6: w.point.latE6,
-                            lngE6: w.point.lngE6,
-                            title: w.title
-                        },
-                        title: w.title,
-                        type: [null, 'Portal', 'Field Trip'][w.type],
-                        typeNum: w.type
-                    }
-                    return wp;
-                })
-            } else {
-                if (info.detailsModified) mp.waypoints = []; // fake-set this
-            }
-
-            return mp;
-        }
-
-        showSettings(el) {
-            let conf = $(`<div><label>API key</label><br><input type="text" class="__apikey" style="width: 100%"><button class="__testBtn">Test</button></div>`);
-
-            el.append(conf);
-
-            let apiKeyEl = $(el).find(".__apikey").first();
-            apiKeyEl.val(this.settings.apikey);
-
-            $(el).find(".__testBtn").click((ev) => {
-
-                console.log("[specops] testing api key: " + apiKeyEl.val());
-                $.get(`${this.config.baseUrl}profile/api-key/test?apiKey=`
-                    + encodeURIComponent(apiKeyEl.val())
-                    + "&iu=" + encodeURIComponent(this.iu)
-                ).done(() => {
-                    console.log("[specops] api key is ok")
-                    alert("API key is OK!")
-                })
-                .fail(xhr => {
-                    console.log("[specops] api key test failed", xhr.statusText);
-                    alert("Failed to verify API key:\n\n" + xhr.statusText);
-                });
-            });
-        }
-
-        saveSettings(el) {
-            this.settings.apikey = $(el).find(".__apikey").val();
-        }
-
-    }
-
     class BannergressIntegration {
 
         constructor(plugin) {
@@ -1506,20 +1329,8 @@ function wrapper(plugin_info) {
     PLUGIN.contextStack = [];
 
     PLUGIN.integrations = {
-        bannergress: new BannergressIntegration(PLUGIN),
-        specops: new SpecOpsQuestIntegration(PLUGIN)
+        bannergress: new BannergressIntegration(PLUGIN)
     };
-
-    if (!localStorage.getItem("SPECOPS_DEV")) {
-        delete PLUGIN.integrations.specops;
-    }
-
-    if (localStorage.getItem("SPECOPS_DEV")) {
-        let p = PLUGIN.integrations.specopsDevLocal = new SpecOpsQuestIntegration(PLUGIN);
-        p.id = 'specopsDevLocal';
-        p.name = 'specops [localhost]';
-        p.config = { baseUrl: 'http://localhost:8420/api/' };
-    }
 
     PLUGIN.setupCSS = function() {
 
