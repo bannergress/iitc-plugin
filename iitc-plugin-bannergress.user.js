@@ -2,7 +2,7 @@
 // @id             bannergress-plugin
 // @name           IITC Plugin: Bannergress
 // @category       Misc
-// @version        0.5.0
+// @version        0.5.1
 // @namespace      https://github.com/bannergress/iitc-plugin
 // @updateURL      https://bannergress.com/iitc-plugin-bannergress.user.js
 // @downloadURL    https://bannergress.com/iitc-plugin-bannergress.user.js
@@ -20,7 +20,15 @@ function wrapper(plugin_info) {
     // PLUGIN START ////////////////////////////////////////////////////////
 
     if (window.plugin.bannerIndexer) {
-        alert("BANNERGRESS PLUGIN ALREADY INSTALLED - DO YOU HAVE 2 COPIES OF IT ??");
+        // bootPlugins is not ready yet, wait until loaded
+        setTimeout(function() {
+            let otherplugin = window.bootPlugins.info.filter(function(e) { if (e.script.name.match(/^IITC Plugin: Bannergress$/)) return e; });
+            let otherpluginversion = '';
+            if (otherplugin.length > 0) {
+                otherpluginversion = '\nOther plugin version: IITC Plugin: Bannergress ' + otherplugin[0].script.version;
+            }
+            alert('IITC Plugin: Bannergress ' + plugin_info.script.version + "\n\nERROR: There are multiple copies of this plugin active!" + otherpluginversion + "\n\nTo fix the problem, you must remove or disable the oldest version!");
+        },0);
         return;
     }
 
