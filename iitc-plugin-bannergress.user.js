@@ -2,7 +2,7 @@
 // @id             bannergress-plugin
 // @name           IITC Plugin: Bannergress
 // @category       Misc
-// @version        0.4.18
+// @version        0.4.19
 // @namespace      https://github.com/bannergress/iitc-plugin
 // @updateURL      https://bannergress.com/iitc-plugin-bannergress.user.js
 // @downloadURL    https://bannergress.com/iitc-plugin-bannergress.user.js
@@ -625,7 +625,7 @@ function wrapper(plugin_info) {
                 //     includeLocked,
                 //     excludeUnnumbered,
                 //     sortAlpha
-                // })
+                // });
 
                 let filteredMissions = this.missions.filter((mission) => {
                     let status = this.getStatus(mission);
@@ -758,7 +758,7 @@ function wrapper(plugin_info) {
                                 console.log("[bannergress] batch: downloading mission", { cur });
                                 this.plugin.downloadMission(cur, (err, mission) => {
 
-                                    console.log("[bannergress] batch: download mission completed:", { cur, err, mission })
+                                    console.log("[bannergress] batch: download mission completed:", { cur, err, mission });
 
                                     if (err) {
                                         if (err.isCritical) {
@@ -1270,7 +1270,7 @@ function wrapper(plugin_info) {
                 });
             })
             .fail((err) => {
-                console.error("[bannegress] error loading keycloak script", err);
+                console.error("[bannergress] error loading keycloak script", err);
                 callback(err);
             })
         }
@@ -1282,7 +1282,7 @@ function wrapper(plugin_info) {
             this.isAuthenticated = false;
 
             if (this.keycloak == null) {
-                console.log("[bannergress] creating interface..")
+                console.log("[bannergress] creating interface..");
                 this.keycloak = new Keycloak(this.config.keycloak);
             }
 
@@ -1438,7 +1438,7 @@ function wrapper(plugin_info) {
                 console.log("[bannergress] checking authentication status..");
 
                 const onLoggedIn = () => {
-                    console.log("[bannergress] authenticated")
+                    console.log("[bannergress] authenticated");
                     el.append("<span>Authenticated!</span><br>");
                     el.append($("<button>", {
                         text: "Log out",
@@ -2197,7 +2197,7 @@ function wrapper(plugin_info) {
 
     PLUGIN.setup = function () {
 
-        console.log("[bannergress] setup")
+        console.log("[bannergress] setup");
 
         // CHECK FOR USAGE OF IITC.me
         // show a warning the first time IITC loads
@@ -2249,6 +2249,8 @@ function wrapper(plugin_info) {
                 iitcversioncheck.showwarning = true; // show a warning with a disable checkbox the next times IITC loads
                 storeiitcversioncheck();
             }
+        } else {
+            delete localStorage['bannergressiitcversioncheck'];
         }
 
         this.initialized = false;
@@ -2319,4 +2321,3 @@ info.script = {
 }
 script.appendChild(document.createTextNode('(' + wrapper + ')(' + JSON.stringify(info) + ');'));
 (document.body || document.head || document.documentElement).appendChild(script);
-
