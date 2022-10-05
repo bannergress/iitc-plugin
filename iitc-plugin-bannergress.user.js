@@ -2,7 +2,7 @@
 // @id             bannergress-plugin
 // @name           IITC Plugin: Bannergress
 // @category       Misc
-// @version        0.5.1
+// @version        0.5.2
 // @namespace      https://github.com/bannergress/iitc-plugin
 // @updateURL      https://bannergress.com/iitc-plugin-bannergress.user.js
 // @downloadURL    https://bannergress.com/iitc-plugin-bannergress.user.js
@@ -568,8 +568,10 @@ function wrapper(plugin_info) {
             div[0].style.overflowY = 'auto';
 
             // inject toolbox above <div> that contains missions list
+
             let elems = $(this.plugin.missionsListHtml);
             elems.insertBefore(div);
+console.log('DEBUG insert missionsListHtml');
 
             // inject settings button
             let buttons = getDialogButtons(dlg);
@@ -1077,10 +1079,6 @@ function wrapper(plugin_info) {
         }
 
         initialize(callback) {
-            if ("android" in window && "addInternalHostname" in android) {
-                let hostname = new URL(this.config.keycloak.url).host;
-                android.addInternalHostname(hostname);
-            }
             console.log("[bannergress] loading keycloak script..");
             $.getScript("https://login.bannergress.com/auth/js/keycloak.js")
             .done(() => {
@@ -1959,13 +1957,13 @@ function wrapper(plugin_info) {
             return PLUGIN.createContext(arguments, PLUGIN._showMissionListDialog, 'showMissionListDialog', 'list',
             (context, args, isAfter) => {
                 if (!isAfter) {
-                    //console.log("CALLBACK BEFORE", context);
+                    console.log("CALLBACK BEFORE", context);
                     //console.log("_____constraints", PLUGIN.constraints);
                     context.origin = PLUGIN.constraints;
                     PLUGIN.constraints = null;
                     args[0] = context.missions;
                 } else {
-                    //console.log("CALLBACK AFTER", context);
+                    console.log("CALLBACK AFTER", context);
                     //console.log("_____constraints", PLUGIN.constraints);
                     let opts = {};
                     if (!isSmartphone()) {
@@ -1998,6 +1996,8 @@ function wrapper(plugin_info) {
                 }
             });
         }
+
+        setTimeout(MISSIONS_PLUGIN.onIITCLoaded.bind(MISSIONS_PLUGIN)); // this will refresh the displayed mission dialog
 
     }.bind(PLUGIN);
 
@@ -2080,6 +2080,22 @@ function wrapper(plugin_info) {
         this.setupCSS();
         this.loadSettings();
         this.registerMissionsControl();
+
+        if (window.plugin.missions.showMissionListDialog.toString().match('isShowingPortalList')) {
+            console.log("[bannergress] replace function showMissionListDialog from Missions 0.3.0 with function from Missions 0.2.2..");
+            window.plugin.missions.showMissionListDialog = function(missions) {
+                window.dialog({
+                    html: this.renderMissionList(missions),
+                    height: 'auto',
+                    width: '400px',
+                    collapseCallback: this.collapseFix,
+                    expandCallback: this.collapseFix,
+                }).dialog('option', 'buttons', {
+                    'Create new mission': function() { open('//missions.ingress.com'); },
+                    'OK': function() { $(this).dialog('close'); },
+                });
+            };
+        }
 
         console.log("[bannergress] initializing..");
         this.provider.initialize(err => {
