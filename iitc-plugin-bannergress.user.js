@@ -2,7 +2,7 @@
 // @id             bannergress-plugin
 // @name           IITC Plugin: Bannergress
 // @category       Misc
-// @version        0.5.2
+// @version        0.5.3
 // @namespace      https://github.com/bannergress/iitc-plugin
 // @updateURL      https://bannergress.com/iitc-plugin-bannergress.user.js
 // @downloadURL    https://bannergress.com/iitc-plugin-bannergress.user.js
@@ -1079,33 +1079,9 @@ console.log('DEBUG insert missionsListHtml');
         }
 
         initialize(callback) {
-            console.log("[bannergress] loading keycloak script..");
-            $.getScript("https://login.bannergress.com/auth/js/keycloak.js")
-            .done(() => {
-                console.log("[bannergress] keycloak script loaded");
-                this.checkAuth((err, res) => {
-                    callback(err, res);
-                    // if (res !== true) {
-                    //     if (confirm("To be able to use the Bannergress plugin you will need to log in to Bannergress first - do you want to do so now?")) {
-                    //         this.login((err, res) => {
-                    //             if (err) {
-                    //                 console.log("[bannergress] Error logging in:", err);
-                    //                 callback(new Error("Could not authenticate against Bannergress - please try reloading the page and try logging in again!"));
-                    //             } else {
-                    //                 callback(null, true);
-                    //             }
-                    //         })
-                    //     } else {
-                    //         callback(new Error("You cannot use the Bannergress plugin without logging in"));
-                    //     }
-
-                    // } else callback(err, res);
-                });
-            })
-            .fail((err) => {
-                console.error("[bannergress] error loading keycloak script", err);
-                callback(err);
-            })
+            this.checkAuth((err, res) => {
+                callback(err, res);
+            });
         }
 
         checkAuth(callback) {
@@ -1114,19 +1090,21 @@ console.log('DEBUG insert missionsListHtml');
 
             this.isAuthenticated = false;
 
-            if (this.keycloak == null) {
+            if (this.keycloakPromise == null) {
                 console.log("[bannergress] creating interface..");
-                this.keycloak = new Keycloak(this.config.keycloak);
-            }
-
-            console.log("[bannergress] initializing..");
-            try {
-                this.keycloak.init({
+                this.keycloakPromise = $.getScript("https://login.bannergress.com/auth/js/keycloak.js")
+                .then(() => (this.keycloak = new Keycloak(this.config.keycloak)))
+                .then(() => this.keycloak.init({
                     token: this.settings.token,
                     refreshToken: this.settings.refreshToken,
                     enableLogging: true,
                     checkLoginIframe: false
-                }).then((authenticated) => {
+                }));
+            }
+
+            console.log("[bannergress] initializing..");
+            try {
+                this.keycloakPromise.then((authenticated) => {
                     this.settings.subject = this.keycloak.subject;
                     this.settings.refreshToken = this.keycloak.refreshToken;
                     this.settings.token = this.keycloak.token;
