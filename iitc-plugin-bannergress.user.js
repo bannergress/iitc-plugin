@@ -2,7 +2,7 @@
 // @id             bannergress-plugin
 // @name           IITC Plugin: Bannergress
 // @category       Misc
-// @version        0.5.3
+// @version        0.5.4
 // @namespace      https://github.com/bannergress/iitc-plugin
 // @updateURL      https://bannergress.com/iitc-plugin-bannergress.user.js
 // @downloadURL    https://bannergress.com/iitc-plugin-bannergress.user.js
@@ -1289,6 +1289,7 @@ console.log('DEBUG insert missionsListHtml');
                         checking.remove();
                         console.error("[bannergress] error checking authentication", err)
                         el.append("Error checking authentication: " + err);
+                        onLoggedOut();
                     } else {
                         if (res) {
                             // keycloak *MAY* say the token is ok here even if it is invalidated......
