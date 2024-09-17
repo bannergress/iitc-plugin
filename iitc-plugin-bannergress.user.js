@@ -850,9 +850,6 @@ console.log('DEBUG insert missionsListHtml');
                         settings.batchMaxUser = Math.min(settings.batchMaxHard, parseInt(batchMaxUserInput.val()));
                         settings.provider = providerSelect.val();
 
-                        // provider
-                        plugin.provider = plugin.integrations[plugin.settings.provider];
-
                         // save!
                         plugin.provider.saveSettings(providerAreaDiv, this.dlg);
                         plugin.saveSettings();
@@ -862,10 +859,6 @@ console.log('DEBUG insert missionsListHtml');
                     }
                 }
             ];
-
-            if (plugin.provider.beforeShowSettings) {
-                plugin.provider.beforeShowSettings({ buttons: buttons });
-            }
 
             let focused = false;
 
@@ -891,12 +884,6 @@ console.log('DEBUG insert missionsListHtml');
                                 <td>Enable map controls</td>
                                 <td><input type="checkbox" class="bannerIndexer-settings-dialog-mapControlEnabled" /></td>
                             </tr>
-                            <tr class="bannerIndexer-settings-dialog-provider-row" style="display: none">
-                                <td>Integration</td>
-                                <td>
-                                    <select style="width: 100%" class="bannerIndexer-settings-dialog-provider"></select>
-                                </td>
-                            </tr>
                         </table>
                     </fieldset>
                     <fieldset class="tweaks" style="margin-top: 1em">
@@ -921,7 +908,7 @@ console.log('DEBUG insert missionsListHtml');
                         </table>
                     </fieldset>
                     <fieldset style="margin-top: 1em">
-                        <legend>Integration</legend>
+                        <legend>Account</legend>
                         <div class="bannerIndexer-settings-dialog-provider-area"></div>
                     </fieldset>
                 </div>`,
@@ -936,7 +923,6 @@ console.log('DEBUG insert missionsListHtml');
                         focused = true;
 
                         // find our controls
-                        providerSelect = $(".bannerIndexer-settings-dialog-provider").first();
                         providerAreaDiv = $(".bannerIndexer-settings-dialog-provider-area").first();
                         mapControlEnabledCbx = $(".bannerIndexer-settings-dialog-mapControlEnabled").first();
                         batchMaxUserInput = $(".bannerIndexer-settings-dialog-batchMaxUser").first();
@@ -963,25 +949,6 @@ console.log('DEBUG insert missionsListHtml');
                         }
 
                         this.dlg.dialog("option", "position", {my: "center", at: "center", of: window});
-
-                        //console.log("select", select);
-                        for (let key in plugin.integrations) {
-                            //console.log("== " + key);
-                            let integration = plugin.integrations[key];
-                            let option = $("<option>", {
-                                value: key,
-                                text: integration.name,
-                                selected: key == plugin.provider.id,
-                            })
-                            //console.log("option", option);
-                            providerSelect.append(option);
-                        }
-                        providerSelect.change((ev) => {
-                            //console.log("integration changed", ev);
-                            let temp = plugin.integrations[ev.target.value];
-                            providerAreaDiv.empty();
-                            temp.showSettings(providerAreaDiv, this.dlg);
-                        })
 
                         providerAreaDiv.empty();
                         plugin.provider.showSettings(providerAreaDiv, this.dlg);
@@ -1236,11 +1203,6 @@ console.log('DEBUG insert missionsListHtml');
                     $("<button>", {
                         text: "Log in",
                         click: () => {
-                            // this will redirect via an external site, so
-                            // we need to set this as the provider and save
-                            // settings
-                            plugin.provider = this;
-                            plugin.saveSettings();
                             console.log("[bannergress] login");
                             if (this.isAuthenticated) this.keycloak.logout();
                             this.login();
@@ -1278,9 +1240,7 @@ console.log('DEBUG insert missionsListHtml');
     PLUGIN.contexts = {};
     PLUGIN.contextStack = [];
 
-    PLUGIN.integrations = {
-        bannergress: new BannergressIntegration(PLUGIN)
-    };
+    PLUGIN.provider = new BannergressIntegration(PLUGIN);
 
     PLUGIN.setupCSS = function() {
 
@@ -1466,16 +1426,11 @@ console.log('DEBUG insert missionsListHtml');
 
         //console.log("PLUGIN SETTINGS", this.settings);
 
-        for (let id in this.integrations) {
-            let ps = getKey("plugin.bannerIndexer.settings." + id);
-            if (ps != null) {
-                console.log("[bannergress] loading settings for " + id + ":", ps);
-                this.integrations[id].settings = Object.assign({}, this.integrations[id].settings, ps);
-            }
+        let ps = getKey("plugin.bannerIndexer.settings.bannergress");
+        if (ps != null) {
+            console.log("[bannergress] loading settings:", ps);
+            this.provider.settings = Object.assign({}, this.provider.settings, ps);
         }
-
-        this.provider = this.integrations[this.settings.provider]
-            || this.integrations[Object.keys(this.integrations)[0]];
 
     }.bind(PLUGIN);
 
