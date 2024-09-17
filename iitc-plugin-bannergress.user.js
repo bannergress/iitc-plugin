@@ -738,63 +738,53 @@ console.log('DEBUG insert missionsListHtml');
 
                     let progressDlg = new ProgressDialog(this, () => { this.stopBatch = true });
 
-                    progressDlg.show(() => {
+                    progressDlg.show(async() => {
                         dlg.parent().hide(); // hide window while working
 
                         let num = 0;
                         let count = filteredMissions.length;
 
                         let okCount = 0;
-                        let errCount = 0;
                         let failed = [];
 
-                        const downloadNext = async () => {
-                            //console.log("batch: NEXT!");
-
-                            progressDlg.setStatus("");
-                            let cur = filteredMissions.shift();
+                        for (const cur of filteredMissions) {
+                            if (num > 0) {
+                                const batchWaitBase = this.plugin.settings.batchMinimumDelay;
+                                const batchWaitRandom = this.plugin.settings.batchRandomizeExtraDelay;
+                                const wait = Math.round(batchWaitBase + Math.random() * batchWaitRandom); // random waiting
+                                await new Promise((resolve) => setTimeout(resolve, wait));
+                            }
+                            if (this.stopBatch) {
+                                break;
+                            }
                             console.log("[bannergress] batch: process next:", cur);
-                            if (cur && !this.stopBatch) {
-
-                                progressDlg.setStatus(`Processing ${num+1} of ${count}..`);
-                                progressDlg.setExtra(cur.title);
-                                progressDlg.setProgress(num, count);
-                                num++;
-
-                                let batchWaitBase = this.plugin.settings.batchMinimumDelay;
-                                let batchWaitRandom = this.plugin.settings.batchRandomizeExtraDelay;
-
-                                console.log("[bannergress] batch: downloading mission", { cur });
-                                try {
-                                    await this.plugin.downloadMission(cur);
-                                    okCount++;
-                                } catch (err) {
-                                    if (err.isCritical) {
-                                        alert("ERROR!\n\nAn error occurred while submitting the mission details - please log in again!")
-                                        this.stopBatch = true;
-                                    }
-                                    errCount++;
-                                    failed.push(cur);
-                                }
-
-                                let wait = filteredMissions.length > 0 && !this.stopBatch
-                                ? Math.round(batchWaitBase + Math.random() * batchWaitRandom)
-                                : 0;
-
-                                setTimeout(() => downloadNext(), wait); // random waiting
-
-                            } else {
-
-                                if (progressDlg.isOpen()) {
-                                    dlg.parent().show();
-                                    progressDlg.close();
-                                    applyFilters();
+                            progressDlg.setStatus(`Processing ${num + 1} of ${count}..`);
+                            progressDlg.setExtra(cur.title);
+                            progressDlg.setProgress(num, count);
+                            num++;
+                            console.log("[bannergress] batch: downloading mission", { cur });
+                            try {
+                                await this.plugin.downloadMission(cur);
+                                okCount++;
+                            } catch (err) {
+                                failed.push(cur);
+                                if (err.isCritical) {
+                                    alert("ERROR!\n\nAn error occurred while submitting the mission details - please log in again!")
+                                    this.stopBatch = true;
+                                    break;
                                 }
                             }
                         }
 
-                        downloadNext();
+                        if (progressDlg.isOpen()) {
+                            dlg.parent().show();
+                            progressDlg.close();
+                            applyFilters();
 
+                            if (failed.length && !this.stopBatch) {
+                                alert(`Failed to upload ${failed.length} missions. Please try again.`);
+                            }
+                        }
                     })
                 }
 
