@@ -1,6 +1,6 @@
 // ==UserScript==
-// @id             bannergress-plugin
 // @name           IITC Plugin: Bannergress
+// @id             bannergress-plugin
 // @category       Misc
 // @version        0.5.4
 // @namespace      https://github.com/bannergress/iitc-plugin
@@ -10,6 +10,8 @@
 // @match          https://intel.ingress.com/*
 // @grant          none
 // ==/UserScript==
+
+/* global $ L isSmartphone dialog map Keycloak */
 
 function wrapper(plugin_info) {
     // ensure plugin framework is there, even if iitc is not yet loaded
@@ -533,7 +535,7 @@ function wrapper(plugin_info) {
                 map.panTo([ lat, lng ], { animate: false });
                 */
                 let bounds = map.getPixelBounds();
-                let width =  Math.abs(bounds.max.x - bounds.min.x);
+                let width = Math.abs(bounds.max.x - bounds.min.x);
                 let height = Math.abs(bounds.max.y - bounds.min.y);
                 let offset = new L.Point(lngDelta * width, -latDelta * height);
                 map.panBy(offset, { animate: false });
@@ -672,10 +674,10 @@ console.log('DEBUG insert missionsListHtml');
             const applyFilters = this.applyFilters = () => {
 
                 let filteredMissions = getFilteredMissions();
-                let numHidden =  this.missions.length - filteredMissions.length;
-                if (filteredMissions.length == 0 && this.missions.length > 0)
+                let numHidden = this.missions.length - filteredMissions.length;
+                if (filteredMissions.length == 0 && this.missions.length > 0) {
                     $("#bannerIndexer-filtered-count").text(`Your current filters exclude all missions! (${numHidden} hidden)`).show();
-                else {
+                } else {
                     $("#bannerIndexer-filtered-count").text(`Showing ${filteredMissions.length} of ${this.missions.length} missions (${numHidden} hidden by filters)`).show();
                 }
 
@@ -731,13 +733,14 @@ console.log('DEBUG insert missionsListHtml');
 
                 if (filteredMissions.length > 0) {
                     if (confirmAmount) {
-                        if (!confirm(`This will process ${filteredMissions.length} mission${filteredMissions.length != 1 ? 's' : ''} - are you sure you want to continue?`))
+                        if (!confirm(`This will process ${filteredMissions.length} mission${filteredMissions.length != 1 ? 's' : ''} - are you sure you want to continue?`)) {
                             return;
+                        }
                     }
 
                     let funs = elems.find(".bannerIndexer-functions");
 
-                    let progressDlg = new ProgressDialog(this, () => this.stopBatch = true);
+                    let progressDlg = new ProgressDialog(this, () => { this.stopBatch = true });
 
                     progressDlg.show(() => {
                         dlg.parent().hide(); // hide window while working
@@ -1054,7 +1057,7 @@ console.log('DEBUG insert missionsListHtml');
         constructor(plugin) {
             this.plugin = plugin;
 
-            this.id =  'bannergress';
+            this.id = 'bannergress';
 
             this.name = "Bannergress";
 
@@ -1135,7 +1138,7 @@ console.log('DEBUG insert missionsListHtml');
 
             console.log("[bannergress] performing preflight..");
             this.keycloak.updateToken(30).then((refreshed) => {
-                console.log("[bannergress] token was " + (refreshed ? "refreshed" : "still valid"),  { token: this.settings.token, refreshToken: this.settings.refreshToken });
+                console.log("[bannergress] token was " + (refreshed ? "refreshed" : "still valid"), { token: this.settings.token, refreshToken: this.settings.refreshToken });
                 if (refreshed) {
                     this.settings.token = this.keycloak.token;
                     this.settings.refreshToken = this.keycloak.refreshToken;
@@ -1160,12 +1163,12 @@ console.log('DEBUG insert missionsListHtml');
             let missionIds = missions instanceof Array
                     ? missions.map(function(m) { return m.guid })
                     : [ missions.guid ];
-            console.log("[bannergress] checking missions",  { missions, missionIds });
+            console.log("[bannergress] checking missions", { missions, missionIds });
 
             this.preflight(err => {
                 if (err) return callback(err);
                 console.log("[bannergress] checking which missions have been indexed..");
-                console.log("[bannergress] " + `${this.config.baseUrl}missions/status ` + JSON.stringify(missionIds));
+                console.log(`[bannergress] ${this.config.baseUrl}missions/status ` + JSON.stringify(missionIds));
                 $.ajax({
                     type: 'POST',
                     contentType: "application/json; charset=utf-8",
@@ -1407,7 +1410,7 @@ console.log('DEBUG insert missionsListHtml');
 
         </style>`);
 
-    }.bind(PLUGIN);
+    };
 
     PLUGIN.broadcastUpdateElem = function(mission, sourceContext) {
         //console.log("broadcast update elem -> ", mission);
@@ -1492,7 +1495,7 @@ console.log('DEBUG insert missionsListHtml');
                 }
             );
         }, 0);
-    }.bind(PLUGIN);
+    };
 
     PLUGIN.loadSettings = function() {
 
@@ -1563,7 +1566,7 @@ console.log('DEBUG insert missionsListHtml');
 
     let lockedColor = `#B4F3F9`;
     let waitColor = `#FACD00`;
-    let newColor = '#FFEB31';  //`#FACD00`;
+    let newColor = '#FFEB31';
     let updateColor = `#45DC00`;
 
     PLUGIN.icons = {
@@ -2012,7 +2015,7 @@ console.log('DEBUG insert missionsListHtml');
             let iitcversioncheck = {};
             function loadiitcversioncheck() {
                 try {
-                    iitcversioncheck = JSON.parse(localStorage['bannergressiitcversioncheck']);
+                    iitcversioncheck = JSON.parse(localStorage.bannergressiitcversioncheck);
                     if (iitcversioncheck.bannergressversion != plugin_info.script.version) { // show the warning again if the version of Bannergress has changed
                         iitcversioncheck.showwarning = true;
                     }
@@ -2021,7 +2024,7 @@ console.log('DEBUG insert missionsListHtml');
                 }
             }
             function storeiitcversioncheck() {
-                localStorage['bannergressiitcversioncheck'] = JSON.stringify(iitcversioncheck);
+                localStorage.bannergressiitcversioncheck = JSON.stringify(iitcversioncheck);
             }
             loadiitcversioncheck();
             if (!('showwarning' in iitcversioncheck) || iitcversioncheck.showwarning) {
@@ -2052,7 +2055,7 @@ console.log('DEBUG insert missionsListHtml');
                 storeiitcversioncheck();
             }
         } else {
-            delete localStorage['bannergressiitcversioncheck'];
+            delete localStorage.bannergressiitcversioncheck;
         }
 
         this.initialized = false;
