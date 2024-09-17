@@ -252,7 +252,13 @@ function wrapper(plugin_info) {
         }
     }
 
-    function getMissionDetails(guid, callback, errorcallback) {
+    async function postAjaxIntel(action, data) {
+        return new Promise((resolve, reject) => {
+            window.postAjax(action, data, resolve, reject);
+        });
+    };
+
+    async function getMissionDetails(guid) {
 
         // The window.plugin.missions.loadMission() method is broken in 2 ways
         //
@@ -264,26 +270,26 @@ function wrapper(plugin_info) {
         //
         // 3. (it caches data for quite long)
 
-        window.postAjax('getMissionDetails', {
-            guid: guid
-        }, function(data) {
+        try {
+            const data = await postAjaxIntel('getMissionDetails', {
+                guid: guid
+            });
             console.debug("[bannergress] got intel data:", data);
-            try {
-                let mission = decodeMission(data.result);
-                console.debug("[bannergress] decoded intel data:", mission);
+            const mission = decodeMission(data.result);
+            console.debug("[bannergress] decoded intel data:", mission);
 
-                updateMissionCache(mission);
+            updateMissionCache(mission);
 
-                if (!mission) errorcallback(new Error("Invalid data"));
-                else callback(mission);
-            } catch (err) {
-                errorcallback(err);
+            if (!mission) {
+                throw new Error("Invalid data");
             }
-        }, function(err) {
+            else {
+                return mission;
+            };
+        } catch (err) {
             console.error("[bannergress] ERROR GETTING MISSION INFO FROM INTEL", err);
-            errorcallback(err);
-        });
-
+            throw err;
+        }
     }
 
     function decodeWaypoint(data) {
@@ -443,23 +449,13 @@ function wrapper(plugin_info) {
             }
 
             if (!status.locked) {
-                mission.$ours.click(() => {
-                    //console.log("DOWNLOAD", mission);
-                    this.plugin.downloadMission(mission, (err, updatedMission) => {
-                        if (!err) {
-                            //console.log("DOWNLOAD OK!", updatedMission);
-
-                            // re-apply filters if this is a list (remove etc)
-                            // if (this.type == "list") {
-                            //     if (this.applyFilters) this.applyFilters();
-                            // }
-                            // ^TODO: FIXME: this scrolls the list to the top again...
-
-                        } else {
-                            alert("ERROR!\n\nAn error occurred while processing mission details:\n\n" + err.message);
-                            console.log("[bannergress] ERROR DOWNLOADING MISSION:", err);
-                        }
-                    });
+                mission.$ours.click(async () => {
+                    try {
+                        await this.plugin.downloadMission(mission);
+                    } catch (err) {
+                        alert("ERROR!\n\nAn error occurred while processing mission details:\n\n" + err.message);
+                        console.log("[bannergress] ERROR DOWNLOADING MISSION:", err);
+                    }
                 });
             }
 
@@ -752,7 +748,7 @@ console.log('DEBUG insert missionsListHtml');
                         let errCount = 0;
                         let failed = [];
 
-                        const downloadNext = () => {
+                        const downloadNext = async () => {
                             //console.log("batch: NEXT!");
 
                             progressDlg.setStatus("");
@@ -769,27 +765,23 @@ console.log('DEBUG insert missionsListHtml');
                                 let batchWaitRandom = this.plugin.settings.batchRandomizeExtraDelay;
 
                                 console.log("[bannergress] batch: downloading mission", { cur });
-                                this.plugin.downloadMission(cur, (err, mission) => {
-
-                                    console.log("[bannergress] batch: download mission completed:", { cur, err, mission });
-
-                                    if (err) {
-                                        if (err.isCritical) {
-                                            alert("ERROR!\n\nAn error occurred while submitting the mission details - please log in again!")
-                                            this.stopBatch = true;
-                                        }
-                                        errCount++;
-                                        failed.push(cur);
-                                    } else {
-                                        okCount++;
+                                try {
+                                    await this.plugin.downloadMission(cur);
+                                    okCount++;
+                                } catch (err) {
+                                    if (err.isCritical) {
+                                        alert("ERROR!\n\nAn error occurred while submitting the mission details - please log in again!")
+                                        this.stopBatch = true;
                                     }
+                                    errCount++;
+                                    failed.push(cur);
+                                }
 
-                                    let wait = filteredMissions.length > 0 && !this.stopBatch
-                                        ? Math.round(batchWaitBase + Math.random() * batchWaitRandom)
-                                        : 0;
+                                let wait = filteredMissions.length > 0 && !this.stopBatch
+                                ? Math.round(batchWaitBase + Math.random() * batchWaitRandom)
+                                : 0;
 
-                                    setTimeout(() => downloadNext(), wait); // random waiting
-                                });
+                                setTimeout(() => downloadNext(), wait); // random waiting
 
                             } else {
 
@@ -1081,13 +1073,11 @@ console.log('DEBUG insert missionsListHtml');
             this.isAuthenticated = false;
         }
 
-        initialize(callback) {
-            this.checkAuth((err, res) => {
-                callback(err, res);
-            });
+        async initialize() {
+            await this.checkAuth();
         }
 
-        checkAuth(callback) {
+        async checkAuth() {
 
             const plugin = this.plugin;
 
@@ -1107,124 +1097,99 @@ console.log('DEBUG insert missionsListHtml');
 
             console.log("[bannergress] initializing..");
             try {
-                this.keycloakPromise.then((authenticated) => {
-                    this.settings.subject = this.keycloak.subject;
-                    this.settings.refreshToken = this.keycloak.refreshToken;
-                    this.settings.token = this.keycloak.token;
-                    plugin.saveProviderSettings(this);
-                    this.isAuthenticated = authenticated;
-                    callback(null, authenticated);
-                }).catch(err => {
-                    console.log("[bannergress] error initializing keycloak", err);
-                    callback(err);
-                });
+                const authenticated = await this.keycloakPromise;
+                this.settings.subject = this.keycloak.subject;
+                this.settings.refreshToken = this.keycloak.refreshToken;
+                this.settings.token = this.keycloak.token;
+                plugin.saveProviderSettings(this);
+                this.isAuthenticated = authenticated;
+                return authenticated;
             } catch (err) {
                 console.error("[bannergress] keycloak initialization error:", err);
-                callback(err);
+                throw err;
             }
 
         }
 
-        login(callback) {
+        async login() {
             if (!this.isAuthenticated) {
-                this.keycloak.login({ scope: 'offline_access' })
-                .then(() => callback(null))
-                .catch(err => callback(err));
+                await this.keycloak.login({ scope: 'offline_access' })
             }
         }
 
-        preflight(callback) {
-            const plugin = this.plugin;
-
-            console.log("[bannergress] performing preflight..");
-            this.keycloak.updateToken(30).then((refreshed) => {
-                console.log("[bannergress] token was " + (refreshed ? "refreshed" : "still valid"), { token: this.settings.token, refreshToken: this.settings.refreshToken });
+        async preflight() {
+            try {
+                const refreshed = await this.keycloak.updateToken(30);
                 if (refreshed) {
                     this.settings.token = this.keycloak.token;
                     this.settings.refreshToken = this.keycloak.refreshToken;
-                    plugin.saveProviderSettings(this);
+                    this.plugin.saveProviderSettings(this);
                 }
-                callback(null);
-            }).catch(err => {
+            } catch (err) {
                 console.error("[bannergress] error refreshing token, you have to log in again!", err);
-                callback(new Error("Error refreshing access token, you will have to log in again via the options dialog!"));
-                // this.checkAuth((err, res) => {
-                //     if (err) {
-                //         console.error("[bannergress] error refreshing token, you have to log in again!", err);
-                //         callback(new Error("Error refreshing access token, you have to log in again!"));
-                //     }
-                //     else callback(null);
-                // });
+                throw new Error("Error refreshing access token, you will have to log in again via the options dialog!");
+            }
+        }
+
+        async ajaxBannergress(request) {
+            await this.preflight();
+            return $.ajax({
+                headers: {
+                    authorization: `Bearer ${this.settings.token}`
+                },
+                url: `${this.config.baseUrl}${request.path}`,
+                ...request
             })
         }
 
-        checkMissions(missions, callback) {
-
+        async checkMissions(missions) {
             let missionIds = missions instanceof Array
                     ? missions.map(function(m) { return m.guid })
                     : [ missions.guid ];
             console.log("[bannergress] checking missions", { missions, missionIds });
-
-            this.preflight(err => {
-                if (err) return callback(err);
-                console.log("[bannergress] checking which missions have been indexed..");
-                console.log(`[bannergress] ${this.config.baseUrl}missions/status ` + JSON.stringify(missionIds));
-                $.ajax({
+            console.log("[bannergress] checking which missions have been indexed..");
+            try {
+                const res = await this.ajaxBannergress({
                     type: 'POST',
                     contentType: "application/json; charset=utf-8",
                     dataType: "json",
-                    headers: {
-                        authorization: `Bearer ${this.settings.token}`
-                    },
-                    url: `${this.config.baseUrl}missions/status`,
+                    path: "missions/status",
                     data: JSON.stringify(missionIds)
-                }).done(res => {
-                    console.log("[bannergress] check missions returned:", res);
-                    let knownList = this.parseResponse(res);
-                    console.debug("[bannergress] parsed response: %o -> %o", res, knownList);
-                    callback(null, knownList);
-
-                }).fail(xhr => {
-                    console.error("[bannergress] Error checking mission statuses, XHR=", xhr);
-                    let err = new Error(`Error checking mission statuses (XHR: ${xhr.responseText})`)
-                    callback(err);
-                })
-            });
+                });
+                console.log("[bannergress] check missions returned:", res);
+                let knownList = this.parseResponse(res);
+                console.debug("[bannergress] parsed response: %o -> %o", res, knownList);
+                return knownList;
+            } catch (xhr) {
+                console.error("[bannergress] Error checking mission statuses, XHR=", xhr);
+                throw new Error(`Error checking mission statuses (XHR: ${xhr.responseText})`)
+            }
         }
 
-        submitMission(mission, callback) {
-
+        async submitMission(mission) {
             console.log("[bannergress] converting mission plugin data to mission data", { mission });
             let missionData = encodeMission(mission);
             console.log("[bannergress] converted mission data", { missionData, mission });
-            this.preflight(err => {
-                if (err) return callback(err);
-                console.log("[bannergress] importing mission data..");
-                $.ajax({
+            try {
+                const res = await this.ajaxBannergress({
                     type: 'POST',
                     contentType: "application/json; charset=utf-8",
                     dataType: "json",
-                    headers: {
-                        authorization: `Bearer ${this.settings.token}`
-                    },
-                    url: `${this.config.baseUrl}import/details`,
+                    path: "import/details",
                     data: JSON.stringify(missionData)
-                }).done(res => {
-                    console.log("[bannergress] import mission returned:", res);
+                });
+                console.log("[bannergress] import mission returned:", res);
 
-                    if (res.latestUpdateDetails) { // actual api deviates from doc
-                        res = { [mission.guid]: res }
-                    }
+                if (res.latestUpdateDetails) { // actual api deviates from doc
+                    res = { [mission.guid]: res }
+                }
 
-                    let knownList = this.parseResponse(res);
-                    callback(null, knownList.find(x => x.guid == mission.guid));
-                }).fail(xhr => {
-                    console.error("[bannergress] import mission failed:", xhr);
-                    let err = new Error("Failed to submit mission details to server (XHR: " + xhr.statusText + ")");
-                    callback(err);
-                })
-            });
-
+                let knownList = this.parseResponse(res);
+                return knownList.find(x => x.guid == mission.guid);
+            } catch (xhr) {
+                console.error("[bannergress] import mission failed:", xhr);
+                throw new Error("Failed to submit mission details to server (XHR: " + xhr.statusText + ")");
+            }
         }
 
         parseResponse(res) {
@@ -1243,72 +1208,65 @@ console.log('DEBUG insert missionsListHtml');
             return knownList;
         }
 
-        showSettings(el) {
+        async showSettings(el) {
             const plugin = this.plugin;
 
             let checking = $("<span>Checking login status..</span>");
             el.append(checking);
-            this.initialize((err) => {
-                console.log("[bannergress] checking authentication status..");
 
-                const onLoggedIn = () => {
-                    console.log("[bannergress] authenticated");
-                    el.append("<span>Authenticated!</span><br>");
-                    el.append($("<button>", {
-                        text: "Log out",
-                        click: () => {
-                            this.settings.subject = null;
-                            this.settings.token = null;
-                            this.settings.refreshToken = null;
-                            plugin.saveSettings();
-                            this.keycloak.logout(window.location.href);
-                        }
-                    }))
-                }
-
-                const onLoggedOut = () => {
-                    console.log("[bannergress] not authenticated, need login");
-                    el.append('<div style="padding: 0.5em; color: #EE3333; font-size: 1.2em; font-weight: bold">To use the Bannergress plugin you must log in first - please do so now!</div>')
-                    el.append(
-                        $("<button>", {
-                            text: "Log in",
-                            click: () => {
-                                // this will redirect via an external site, so
-                                // we need to set this as the provider and save
-                                // settings
-                                plugin.provider = this;
-                                plugin.saveSettings();
-                                console.log("[bannergress] login");
-                                if (this.isAuthenticated) this.keycloak.logout();
-                                this.login();
-                            }
-                        })
-                    )
-                }
-
-                this.checkAuth((err, res) => {
-                    console.log({ err, res });
-                    if (err) {
-                        checking.remove();
-                        console.error("[bannergress] error checking authentication", err)
-                        el.append("Error checking authentication: " + err);
-                        onLoggedOut();
-                    } else {
-                        if (res) {
-                            // keycloak *MAY* say the token is ok here even if it is invalidated......
-                            this.preflight(err => {
-                                checking.remove();
-                                if (err) onLoggedOut();
-                                else onLoggedIn();
-                            });
-                        } else {
-                            checking.remove();
-                            onLoggedOut();
-                        }
+            const onLoggedIn = () => {
+                console.log("[bannergress] authenticated");
+                el.append("<span>Authenticated!</span><br>");
+                el.append($("<button>", {
+                    text: "Log out",
+                    click: () => {
+                        this.settings.subject = null;
+                        this.settings.token = null;
+                        this.settings.refreshToken = null;
+                        plugin.saveSettings();
+                        this.keycloak.logout(window.location.href);
                     }
-                })
-            })
+                }))
+            }
 
+            const onLoggedOut = () => {
+                console.log("[bannergress] not authenticated, need login");
+                el.append('<div style="padding: 0.5em; color: #EE3333; font-size: 1.2em; font-weight: bold">To use the Bannergress plugin you must log in first - please do so now!</div>')
+                el.append(
+                    $("<button>", {
+                        text: "Log in",
+                        click: () => {
+                            // this will redirect via an external site, so
+                            // we need to set this as the provider and save
+                            // settings
+                            plugin.provider = this;
+                            plugin.saveSettings();
+                            console.log("[bannergress] login");
+                            if (this.isAuthenticated) this.keycloak.logout();
+                            this.login();
+                        }
+                    })
+                )
+            }
+
+            try {
+                await this.initialize();
+                console.log("[bannergress] checking authentication status..");
+                const authenticated = await this.checkAuth();
+                // keycloak *MAY* say the token is ok here even if it is invalidated......
+                if (authenticated) {
+                    await this.preflight();
+                    onLoggedIn();
+                } else {
+                    onLoggedOut();
+                }
+            } catch (err) {
+                console.error("[bannergress] error checking authentication", err)
+                el.append("Error checking authentication: " + err);
+                onLoggedOut();
+            } finally {
+                checking.remove();
+            }
         }
 
         saveSettings(el) {
@@ -1429,7 +1387,7 @@ console.log('DEBUG insert missionsListHtml');
         }
     }.bind(PLUGIN);
 
-    PLUGIN.downloadMission = function(mission, callback) {
+    PLUGIN.downloadMission = async function(mission) {
 
         console.log("[bannergress] downloadMission", mission);
 
@@ -1439,62 +1397,44 @@ console.log('DEBUG insert missionsListHtml');
 
         console.log("[bannergress] loading mission:", mission.guid);
 
-        setTimeout(() => {
-            //window.plugin.missions.loadMission(m.mission.guid,
-            getMissionDetails(mission.guid,
+        try {
+            let details;
+            try {
+                details = await getMissionDetails(mission.guid);
+                console.log("[bannergress] mission loaded:", details);
+            } catch (xhr) {
+                let err = new Error("Intel /r/getMissionDetail request failed (" + xhr.statusText + ")");
+                console.error("[bannergress] ERROR QUERYING MISSION DETAILS FROM INTEL:", { mission, err });
+                throw err;
+            }
 
-                function loadMissionOk(details) {
+            // import new data
+            for (let key in details) mission[key] = details[key];
+            try {
+                let oldEl = mission.$elem;
+                console.debug("[bannergress] re-rendering mission summary element", mission, oldEl);
+                const MISSIONS_PLUGIN = window.plugin.missions;
+                let newEl = MISSIONS_PLUGIN.renderMissionSummary(mission);
+                oldEl.replaceWith(newEl);
+            } catch (err) {
+                console.error("[bannergress] error re-rendering mission summary element", mission, err);
+            }
 
-                    const MISSIONS_PLUGIN = window.plugin.missions;
-
-                    console.log("[bannergress] mission loaded:", details);
-
-                    // import new data
-                    for (let key in details) mission[key] = details[key];
-                    try {
-                        let oldEl = mission.$elem;
-                        console.debug("[bannergress] re-rendering mission summary element", mission, oldEl);
-                        let newEl = MISSIONS_PLUGIN.renderMissionSummary(mission);
-                        oldEl.replaceWith(newEl);
-                    } catch (err) {
-                        console.error("[bannergress] error re-rendering mission summary element", mission, err);
-                    }
-
-                    console.log("[bannergress] submitting mission details to backend..", details);
-
-                    PLUGIN.provider.submitMission(details, function(err, submittedMission) {
-
-                        mission.$pending = false;
-                        if (err) {
-
-                            console.error("[bannergress] ERROR SUBMITTING MISSION DETAILS TO BACKEND:", { details, err });
-                            err.isCritical = true;
-                            mission.$context.updateElem(mission);
-                            if (callback) callback(err);
-
-                        } else {
-
-                            console.log("[bannergress] successfully submitted mission details to backend:", submittedMission);
-                            mission.$known = submittedMission;
-                            mission.$context.updateElem(mission);
-                            if (callback) callback(null, submittedMission);
-
-                        }
-
-                    })
-
-                },
-
-                function loadMissionFailed(xhr) {
-
-                    let err = new Error("Intel /r/getMissionDetail request failed (" + xhr.statusText + ")");
-                    console.error("[bannergress] ERROR QUERYING MISSION DETAILS FROM INTEL:", { mission, err });
-                    mission.$pending = false;
-                    mission.$context.updateElem(mission);
-                    if (callback) callback(err);
-                }
-            );
-        }, 0);
+            console.log("[bannergress] submitting mission details to backend..", details);
+            try {
+                const submittedMission = await PLUGIN.provider.submitMission(details)
+                console.log("[bannergress] successfully submitted mission details to backend:", submittedMission);
+                mission.$known = submittedMission;
+                return submittedMission;
+            } catch(err) {
+                console.error("[bannergress] ERROR SUBMITTING MISSION DETAILS TO BACKEND:", { details, err });
+                err.isCritical = true;
+                throw err;
+            }
+        } finally {
+            mission.$pending = false;
+            mission.$context.updateElem(mission);
+        }
     };
 
     PLUGIN.loadSettings = function() {
@@ -1818,7 +1758,7 @@ console.log('DEBUG insert missionsListHtml');
                         let numErrors = 0;
                         let jobNo = 0;
                         let attemptNo = 0;
-                        const next = () => {
+                        const next = async () => {
                             let job = jobs[jobNo];
                             if (!stopCheck && job != null) {
 
@@ -1828,25 +1768,24 @@ console.log('DEBUG insert missionsListHtml');
                                 waitDlg.setExtra("");
                                 waitDlg.setProgress(jobNo+1, jobs.length);
 
-                                PLUGIN.provider.checkMissions(job, (err, statuses) => {
-                                    if (err) {
-                                        ++numErrors;
-                                        waitDlg.setExtra("ERROR! There was an error checking mission statuses:\n\n" + err.message);
-                                        console.error("[bannergress] ERROR: Failed to check missions statuses:", err);
-                                        ++attemptNo;
-                                        if (attemptNo > 5) {
-                                            attemptNo = 0;
-                                            jobNo++; // skip it
-                                        }
-                                        setTimeout(() => next(), 1000); // retry current
-                                    } else {
-                                        results = results.concat(statuses);
-                                        waitDlg.setExtra("");
-                                        jobNo++;
-                                        attemptNo = 0; // reset
-                                        next(); //setTimeout(() => next(), 1000);
+                                try {
+                                    const statuses = await PLUGIN.provider.checkMissions(job);
+                                    results = results.concat(statuses);
+                                    waitDlg.setExtra("");
+                                    jobNo++;
+                                    attemptNo = 0; // reset
+                                    next(); //setTimeout(() => next(), 1000);
+                                } catch (err) {
+                                    ++numErrors;
+                                    waitDlg.setExtra("ERROR! There was an error checking mission statuses:\n\n" + err.message);
+                                    console.error("[bannergress] ERROR: Failed to check missions statuses:", err);
+                                    ++attemptNo;
+                                    if (attemptNo > 5) {
+                                        attemptNo = 0;
+                                        jobNo++; // skip it
                                     }
-                                });
+                                    setTimeout(() => next(), 1000); // retry current
+                                }
 
                             } else {
 
@@ -2000,7 +1939,7 @@ console.log('DEBUG insert missionsListHtml');
 
     }.bind(PLUGIN);
 
-    PLUGIN.setup = function () {
+    PLUGIN.setup = async function () {
 
         console.log("[bannergress] setup");
 
@@ -2080,30 +2019,29 @@ console.log('DEBUG insert missionsListHtml');
         }
 
         console.log("[bannergress] initializing..");
-        this.provider.initialize(err => {
-            if (err) {
-                console.error("[bannergress] Error while initializing:", err);
-                alert("Error initializing Bannergress plugin:\n\n" + err.message);
-            } else {
-                console.log("[bannergress] initialized!");
-                this.initialized = true;
+        try {
+            await this.provider.initialize();
+            console.log("[bannergress] initialized!");
+            this.initialized = true;
+        } catch (err) {
+            console.error("[bannergress] Error while initializing:", err);
+            alert("Error initializing Bannergress plugin:\n\n" + err.message);
+        }
+
+        // There are some plugins that patch various methods we
+        // patch - in somewhat weird ways - so let them do their work
+        // first, if installed
+        setTimeout(() => {
+
+            this.install();
+
+            if (this.provider.requireLogin && !this.provider.isAuthenticated) {
+                let d = new SettingsDialog(this);
+                d.showRequireLogin = true;
+                d.show();
             }
 
-            // There are some plugins that patch various methods we
-            // patch - in somewhat weird ways - so let them do their work
-            // first, if installed
-            setTimeout(() => {
-
-                this.install();
-
-                if (this.provider.requireLogin && !this.provider.isAuthenticated) {
-                    let d = new SettingsDialog(this);
-                    d.showRequireLogin = true;
-                    d.show();
-                }
-
-            }, 100);
-        });
+        }, 100);
 
         this.setupMapControls();
 
