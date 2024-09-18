@@ -1184,6 +1184,12 @@ console.log('DEBUG insert missionsListHtml');
                         this.keycloak.logout(window.location.href);
                     }
                 }))
+                el.append($("<button>", {
+                    text: "Link agent name",
+                    click: async () => {
+                        await this.linkAccount();
+                    }
+                }))
             }
 
             const onLoggedOut = () => {
@@ -1225,6 +1231,42 @@ console.log('DEBUG insert missionsListHtml');
 
         }
 
+        async linkAccount() {
+            try {
+                const agent = window.PLAYER.nickname;
+                let userInfo = await this.ajaxBannergress({
+                    path: 'user',
+                    dataType: "json"
+                });
+                if (userInfo.agent === agent) {
+                    alert(`Your Bannergress account is already linked to ${agent}`);
+                    return;
+                }
+                if (!confirm(`In order to link your Bannergress account to "${agent}", this will send a COMM message to the Bannergress Team`)) {
+                    return;
+                }
+                if (userInfo.verificationAgent !== agent) {
+                    userInfo = await this.ajaxBannergress({
+                        path: 'user/claim',
+                        type: 'POST',
+                        dataType: "json",
+                        data: {
+                            agent: window.PLAYER.nickname
+                        }
+                    });
+                }
+                await postAjaxIntel("sendPlext", {
+                    message: userInfo.verificationMessage,
+                    latE6: -75_000_000,
+                    lngE6: -40_000_000,
+                    tab: "all"
+                });
+                alert("COMM message has been sent. It may take some time until a Bannergress Team member takes care of it. Please be patient.");
+            } catch (e) {
+                console.error("[bannergress] error linking account", e);
+                alert("Failed to start account linking: " + e);
+            }
+        }
     }
 
     PLUGIN.contexts = {};
