@@ -451,7 +451,7 @@ function wrapper(plugin_info) {
             if (!status.locked) {
                 mission.$ours.click(async () => {
                     try {
-                        await this.plugin.downloadMission(mission);
+                        await this.plugin.downloadMission(mission, false);
                     } catch (err) {
                         alert("ERROR!\n\nAn error occurred while processing mission details:\n\n" + err.message);
                         console.log("[bannergress] ERROR DOWNLOADING MISSION:", err);
@@ -764,7 +764,7 @@ console.log('DEBUG insert missionsListHtml');
                             num++;
                             console.log("[bannergress] batch: downloading mission", { cur });
                             try {
-                                await this.plugin.downloadMission(cur);
+                                await this.plugin.downloadMission(cur, true);
                                 okCount++;
                             } catch (err) {
                                 failed.push(cur);
@@ -1123,7 +1123,7 @@ console.log('DEBUG insert missionsListHtml');
             }
         }
 
-        async submitMission(mission) {
+        async submitMission(mission, setStatusOnline) {
             console.log("[bannergress] converting mission plugin data to mission data", { mission });
             let missionData = encodeMission(mission);
             console.log("[bannergress] converted mission data", { missionData, mission });
@@ -1132,7 +1132,7 @@ console.log('DEBUG insert missionsListHtml');
                     type: 'POST',
                     contentType: "application/json; charset=utf-8",
                     dataType: "json",
-                    path: "import/details",
+                    path: `import/details?setStatusOnline=${setStatusOnline}`,
                     data: JSON.stringify(missionData)
                 });
                 console.log("[bannergress] import mission returned:", res);
@@ -1337,7 +1337,7 @@ console.log('DEBUG insert missionsListHtml');
         }
     }.bind(PLUGIN);
 
-    PLUGIN.downloadMission = async function(mission) {
+    PLUGIN.downloadMission = async function(mission, setStatusOnline) {
 
         console.log("[bannergress] downloadMission", mission);
 
@@ -1372,7 +1372,7 @@ console.log('DEBUG insert missionsListHtml');
 
             console.log("[bannergress] submitting mission details to backend..", details);
             try {
-                const submittedMission = await PLUGIN.provider.submitMission(details)
+                const submittedMission = await PLUGIN.provider.submitMission(details, setStatusOnline)
                 console.log("[bannergress] successfully submitted mission details to backend:", submittedMission);
                 mission.$known = submittedMission;
                 return submittedMission;
