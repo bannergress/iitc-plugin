@@ -1092,8 +1092,8 @@ console.log('DEBUG insert missionsListHtml');
 
             if (this.keycloakPromise == null) {
                 console.log("[bannergress] creating interface..");
-                this.keycloakPromise = $.getScript("https://login.bannergress.com/auth/js/keycloak.js")
-                .then(() => (this.keycloak = new Keycloak(this.config.keycloak)))
+                this.keycloakPromise = import('https://cdn.jsdelivr.net/npm/keycloak-js@26.2.4/lib/keycloak.js')
+                .then(mod => (this.keycloak = new mod.default(this.config.keycloak)))
                 .then(() => this.keycloak.init({
                     token: this.settings.token,
                     refreshToken: this.settings.refreshToken,
