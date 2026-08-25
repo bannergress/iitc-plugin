@@ -2,7 +2,7 @@
 // @id             bannergress-plugin
 // @name           IITC Plugin: Bannergress
 // @category       Misc
-// @version        0.5.4
+// @version        0.5.5
 // @namespace      https://github.com/bannergress/iitc-plugin
 // @updateURL      https://bannergress.com/iitc-plugin-bannergress.user.js
 // @downloadURL    https://bannergress.com/iitc-plugin-bannergress.user.js
